@@ -112,6 +112,7 @@ string calcFileName(string type, int year, int month, int day) {
 }
 
 void refineFile(string type, int year, int month, int day) { 
+  //TODO 시간 재는거 function으로 분리
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
   string fileName = calcFileName(type, year, month, day);
   string fileString = fileToString(inputDirectory + type + "/" + to_string(year) + "/" + fileName);
