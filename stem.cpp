@@ -51,6 +51,8 @@ string calcFileName(string type, int year, int month, int day);
 void myloop(string type);
 string durationToString(long duration);
 
+void removePunctuation( string &str );
+
 // TODO consider pass by parameter (not global variable)
 string outputDirectory;
 string inputDirectory = "./input/";
@@ -194,6 +196,8 @@ string extractContentWithTag(string fileString, string tag, int docPosition) {
   int length = fileString.find(endTag, docPosition) - startPosition;
   result = fileString.substr(startPosition, length);
   trim(result);
+  //TODO should move somewhere
+  removePunctuation(result);
   return result;
 }
 
@@ -238,6 +242,17 @@ void refineDocument(Document &document) {
 void removeStopwordInDocument(Document &document) {
   removeStopword(document.textWords);
   removeStopword(document.headlineWords);
+}
+/*
+void refineWord(string &word) {
+  word.
+}*/
+
+void removePunctuation( string &str ) {
+  char* charsToRemove = "?()'`\",.;";
+  for (unsigned int  i = 0; i < strlen(charsToRemove); ++i) {
+    str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end());
+  }
 }
 
 void removeStopword(list<string> &words) {
