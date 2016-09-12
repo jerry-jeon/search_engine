@@ -1,3 +1,4 @@
+#include <stack>
 #include <cstdio>
 #include <list>
 #include <iostream>
@@ -21,6 +22,10 @@ struct Document {
 string whitespaces (" \t\f\v\n\r");
 list<string> stopwords;
 void initializeStopwords();
+
+stack<high_resolution_clock::time_point> startTimeStack;
+void startTimer();
+void endTimerAndPrint(string with);
 
 void refineFile(string type, int year, int month, int day);
 void refineDocument(Document &document);
@@ -48,7 +53,7 @@ string documentToString(Document document);
 string wordToString(list<string> words);
 
 string calcFileName(string type, int year, int month, int day);
-void myloop(string type);
+void refineFilesInFolder(string type);
 string durationToString(long duration);
 
 void removePunctuation( string &str );
@@ -57,20 +62,27 @@ void removePunctuation( string &str );
 string outputDirectory;
 string inputDirectory = "./input/";
 
+// only for development.
+void startTimer() {
+  startTimeStack.push(high_resolution_clock::now());
+}
+
+void endTimerAndPrint(string with) {
+  auto duration = duration_cast<milliseconds>( high_resolution_clock::now() - startTimeStack.top() ).count();
+  cout << with << endl;
+  cout << durationToString(duration) << endl;
+  startTimeStack.pop();
+}
+
 // TODO use argc, argv to get file names, etc..
 int main(int argc, char *argv[]) {
-  high_resolution_clock::time_point t1 = high_resolution_clock::now();
+  startTimer();
 
   initializeStopwords();
   outputDirectory = argv[1];
-  myloop("APW");
-  myloop("NYT");
-  high_resolution_clock::time_point t2 = high_resolution_clock::now();
-
-  auto duration = duration_cast<milliseconds>( t2 - t1 ).count();
-  cout << "전체 구동 시간 ----------------------" << endl;
-  cout << durationToString(duration) << endl;
-
+  refineFilesInFolder("APW");
+  refineFilesInFolder("NYT");
+  endTimerAndPrint("구동시간-------------------------------------");
 }
 
 string durationToString(long duration) {
@@ -89,7 +101,7 @@ string durationToString(long duration) {
   return result;
 }
 
-void myloop(string type) {
+void refineFilesInFolder(string type) {
   for(int year = 1998; year <= 2000; year++) {
     for(int month = 1; month <= 12; month++) {
       for(int day = 1; day <= 31; day++) {
@@ -114,19 +126,14 @@ string calcFileName(string type, int year, int month, int day) {
 }
 
 void refineFile(string type, int year, int month, int day) { 
-  //TODO 시간 재는거 function으로 분리
-  high_resolution_clock::time_point t1 = high_resolution_clock::now();
   string fileName = calcFileName(type, year, month, day);
   string fileString = fileToString(inputDirectory + type + "/" + to_string(year) + "/" + fileName);
 
   if(fileString != "") {
+    startTimer();
     list<Document> documentList = fileToDocumentList(fileString);
     writeDocumentToFile(fileName, documentList);
-    cout << "refine complete " << fileName << endl;
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>( t2 - t1 ).count();
-    cout << durationToString(duration) << endl;
-    cout << "------------------------------------------------------------" << endl;
+    endTimerAndPrint("refine complete " + fileName);
   }
 }
 
