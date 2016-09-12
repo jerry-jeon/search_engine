@@ -154,8 +154,10 @@ list<Document> fileToDocumentList(string file) {
 //TODO rename
 Document stringToDocument(string file, int docPosition) {
   string headline = extractContentWithTag(file, "HEADLINE", docPosition);
+  removePunctuation(headline);
   list<string> headlineWords = convertStringToWordList(headline);
   string text = extractContentWithTag(file, "TEXT", docPosition);
+  removePunctuation(text);
   list<string> textWords = convertStringToWordList(text);
   Document document = { extractContentWithTag(file, "DOCNO", docPosition), headlineWords, textWords };
   return document;
@@ -191,7 +193,6 @@ string extractContentWithTag(string fileString, string tag, int docPosition) {
   result = fileString.substr(startPosition, length);
   trim(result);
   //TODO should move somewhere
-  removePunctuation(result);
   return result;
 }
 
