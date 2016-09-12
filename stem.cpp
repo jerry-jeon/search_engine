@@ -134,16 +134,10 @@ string fileToString(string fileName) {
   string line, result = "";
   ifstream file (fileName);
   if(file.is_open()) {
-    while(getline(file, line)) {
-      result.append(line);
-    }
+    result.assign( (istreambuf_iterator<char>(file) ), (istreambuf_iterator<char>()));
     file.close();
     cout << "read complete " << fileName << endl;
-  } else {
-    //cout << "doesn't exist " << fileName << endl;
-    //this line for development
   }
-
   return result;
 }
 
