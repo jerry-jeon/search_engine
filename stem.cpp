@@ -27,41 +27,34 @@ void logList(list<string> strings);
 string durationToString(long duration);
 //these above functions and variables are for development.
 
+string inputDirectory, outputDirectory, stopwordsFile;
+int handleArguments(int argc, char* argv[]);
 string whitespaces (" \t\f\v\n\r");
 list<string> stopwords;
 void initializeStopwords();
 
+string makeFileName(string type, int year, int month, int day);
+string getFileIntoString(string fileName);
+void transformFilesInFolder(string type);
 void transformFile(string type, int year, int month, int day);
 void transformDocument(Document &document);
 int findDOCTagPosition(string fileString, int startPosition);
 
-string getFileIntoString(string fileName);
-list<Document> extractDocumentList(string file);
-Document extractDocument(string file, int docPosition);
-string extractContentByTag(string fileString, string tag, int docPosition);
-list<string> convertStringToWordList(string str);
+list<string> tokenize(string str);
+list<Document> parseToDocuments(string fileString);
+Document parseToDocument(string file, int docPosition);
+string extractContentInTag(string fileString, string tag, int docPosition);
 void trim(string &str);
-void rightTrim(string &str);
-void leftTrim(string &str);
 
+void removePunctuation( string &str );
 void removeStopwordInDocument(Document &document);
 void removeStopword(list<string> &words);
-
 void stemDocument(Document &document);
 void stemWordList(list<string> &words);
 
 void writeDocumentToFile(string fileName, list<Document> document);
 string documentToString(Document document);
 string concatStringList(list<string> words);
-
-string makeFileName(string type, int year, int month, int day);
-void transformFilesInFolder(string type);
-
-void removePunctuation( string &str );
-
-// TODO consider pass by parameter (not global variable)
-string outputDirectory;
-string inputDirectory = "./input/";
 
 void startTimer() {
   startTimeStack.push(high_resolution_clock::now());
@@ -99,24 +92,41 @@ void logList(list<string> strings) {
 }
 //these above functions are for development.
 
-// TODO use argc, argv to get file names, etc..
 int main(int argc, char *argv[]) {
   startTimer();
 
-  // TODO argument 처리하는 function 작성
-  initializeStopwords();
-  outputDirectory = argv[1];
+  if(handleArguments(argc, argv) == -1) {
+    return -1;
+  } else {
+    initializeStopwords();
 
-  transformFilesInFolder("APW");
-  transformFilesInFolder("NYT");
+    //transformFilesInFolder("APW");
+    transformFilesInFolder("NYT");
 
-  endTimerAndPrint("구동시간-------------------------------------");
+    endTimerAndPrint("구동시간-------------------------------------");
+    return 0;
+  }
+ 
+}
+
+// return -1 if argument is not valid
+int handleArguments(int argc, char* argv[]) {
+  if(argc < 4) {
+    cout << "다음의 형태로 사용해주세요" << endl;
+    cout << argv[0] << " input폴더 output폴더 stopword파일" << endl;
+    cout << "ex) " << argv[0] << " input/ output/ stopwords.txt" << endl;
+    return -1;
+  } else {
+    inputDirectory = argv[1];
+    outputDirectory = argv[2];
+    stopwordsFile = argv[3];
+    return 0;
+  }
 }
 
 void initializeStopwords() {
-  //TODO stopword file argv로 받도록
   string line;
-  ifstream file ("stopwords.txt");
+  ifstream file (stopwordsFile);
   if(file.is_open()) {
     while(getline(file, line)) {
       if(!line.empty())
@@ -143,7 +153,7 @@ void transformFile(string type, int year, int month, int day) {
 
   if(fileString != "") {
     startTimer();
-    list<Document> documentList = extractDocumentList(fileString);
+    list<Document> documentList = parseToDocuments(fileString);
     writeDocumentToFile(fileName, documentList);
     endTimerAndPrint("refine complete " + fileName);
   }
@@ -173,32 +183,31 @@ string getFileIntoString(string fileName) {
   return result;
 }
 
-list<Document> extractDocumentList(string file) {
+list<Document> parseToDocuments(string fileString) {
   list<Document> documentList;
-  for(int docPosition = findDOCTagPosition(file, 0); docPosition != string::npos; docPosition = getDocPosition(file, docPosition)) {
-    Document document = extractDocument(file, docPosition);
+  for(int docPosition = findDOCTagPosition(fileString, 0); docPosition != string::npos; docPosition = findDOCTagPosition(fileString, docPosition)) {
+    Document document = parseToDocument(fileString, docPosition);
     transformDocument(document);
     documentList.push_back(document);
   }
   return documentList;
 }
 
-// return if doc doens't exist
+// return npos if doc doens't exist
 int findDOCTagPosition(string fileString, int startPosition) {
   string startTag = "<DOC>";
   int result = fileString.find(startTag, startPosition);
   return result != string::npos ? result + startTag.length() : string::npos;
 }
 
-//TODO rename
-Document extractDocument(string file, int docPosition) {
-  string headline = extractContentByTag(file, "HEADLINE", docPosition);
+Document parseToDocument(string file, int docPosition) {
+  string headline = extractContentInTag(file, "HEADLINE", docPosition);
   removePunctuation(headline);
-  list<string> headlineWords = convertStringToWordList(headline);
-  string text = extractContentByTag(file, "TEXT", docPosition);
+  list<string> headlineWords = tokenize(headline);
+  string text = extractContentInTag(file, "TEXT", docPosition);
   removePunctuation(text);
-  list<string> textWords = convertStringToWordList(text);
-  Document document = { extractContentByTag(file, "DOCNO", docPosition), headlineWords, textWords };
+  list<string> textWords = tokenize(text);
+  Document document = { extractContentInTag(file, "DOCNO", docPosition), headlineWords, textWords };
   return document;
 }
 
@@ -209,7 +218,7 @@ void removePunctuation( string &str ) {
   }
 }
 
-list<string> convertStringToWordList(string str) {
+list<string> tokenize(string str) {
   list<string> result;
   istringstream iss(str);
   do {
@@ -220,7 +229,7 @@ list<string> convertStringToWordList(string str) {
   return result;
 }
 
-string extractContentByTag(string fileString, string tag, int docPosition) {
+string extractContentInTag(string fileString, string tag, int docPosition) {
   string startTag = "<" + tag + ">";
   string endTag = "</" + tag + ">";
   string result;
@@ -233,21 +242,15 @@ string extractContentByTag(string fileString, string tag, int docPosition) {
 }
 
 void trim(string &str) {
-  rightTrim(str);
-  leftTrim(str);
-}
-
-// TODO clear 처리
-void rightTrim(string &str) {
-  size_t found = str.find_last_not_of(whitespaces);
+  // trim right
+  size_t found = str.find_last_not_of(whitespaces); 
   if (found!=string::npos) {
     str.erase(found+1);
   }else {
     str.clear();
   }
-}
 
-void leftTrim(string &str) {
+  // trim left
   str.erase(0, str.find_first_not_of(whitespaces));
 }
 
@@ -281,7 +284,6 @@ void stemWordList(list<string> &words) {
     Porter2Stemmer::stem(*iter);
     iter++;
   }
-  logList(words);
 }
 
 void writeDocumentToFile(string fileName, list<Document> documentList) {
@@ -302,7 +304,6 @@ string documentToString(Document document) {
   return result;
 }
 
-//TODO should rename becuase It's not words. (It's stems)
 string concatStringList(list<string> words) {
   string result;
   list<string>::iterator iter = words.begin();
