@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <regex>
 #include "porter2_stemmer.cpp"
 
 #include <chrono> // this is for check execution time
@@ -47,6 +48,7 @@ string extractContentInTag(string fileString, string tag, int docTagStartPositio
 void trim(string &str);
 
 void removePunctuation( string &str );
+void removeNumberWords( list<string> &words );
 void removeStopwordInDocument(Document &document);
 void removeStopword(list<string> &words);
 void stemDocument(Document &document);
@@ -100,8 +102,9 @@ int main(int argc, char *argv[]) {
   } else {
     initializeStopwords();
 
+    //transformFile("APW", 1998, 6, 1);
     transformFilesInFolder("APW");
-    transformFilesInFolder("NYT");
+    //transformFilesInFolder("NYT");
 
     endTimerAndPrint("구동시간-------------------------------------");
     return 0;
@@ -192,6 +195,7 @@ list<Document> parseToDocuments(string fileString) {
     documentList.push_back(document);
 
     docTagStartPosition = findDOCTagPosition(fileString, docTagStartPosition);
+    //return documentList;
   }
 
   return documentList;
@@ -259,10 +263,23 @@ void trim(string &str) {
 }
 
 void transformDocument(Document &document) {
+  removeNumberWords(document.headlineWords);
+  removeNumberWords(document.textWords);
   removeStopword(document.headlineWords);
   removeStopword(document.textWords);
   stemWordList(document.headlineWords);
   stemWordList(document.textWords);
+}
+
+void removeNumberWords( list<string> &words ) {
+  regex reg(".*[0-9]+.*");
+  list<string>::iterator iter = words.begin();
+  while( iter != words.end()) {
+    if(regex_match(*iter, reg)) { 
+      iter = words.erase(iter);
+    } else
+      iter++;
+  }
 }
 
 void removeStopword(list<string> &words) {
