@@ -42,8 +42,8 @@ int findDOCTagPosition(string fileString, int startPosition);
 
 list<string> tokenize(string str);
 list<Document> parseToDocuments(string fileString);
-Document parseToDocument(string file, int docPosition);
-string extractContentInTag(string fileString, string tag, int docPosition);
+Document parseToDocument(string file, int docTagStartPosition);
+string extractContentInTag(string fileString, string tag, int docTagStartPosition);
 void trim(string &str);
 
 void removePunctuation( string &str );
@@ -185,8 +185,8 @@ string getFileIntoString(string fileName) {
 
 list<Document> parseToDocuments(string fileString) {
   list<Document> documentList;
-  for(int docPosition = findDOCTagPosition(fileString, 0); docPosition != string::npos; docPosition = findDOCTagPosition(fileString, docPosition)) {
-    Document document = parseToDocument(fileString, docPosition);
+  for(int docTagStartPosition = findDOCTagPosition(fileString, 0); docPosition != string::npos; docPosition = findDOCTagPosition(fileString, docPosition)) {
+    Document document = parseToDocument(fileString, docTagStartPosition);
     transformDocument(document);
     documentList.push_back(document);
   }
@@ -200,14 +200,14 @@ int findDOCTagPosition(string fileString, int startPosition) {
   return result != string::npos ? result + startTag.length() : string::npos;
 }
 
-Document parseToDocument(string file, int docPosition) {
-  string headline = extractContentInTag(file, "HEADLINE", docPosition);
+Document parseToDocument(string file, int docTagStartPosition) {
+  string headline = extractContentInTag(file, "HEADLINE", docTagStartPosition);
   removePunctuation(headline);
   list<string> headlineWords = tokenize(headline);
-  string text = extractContentInTag(file, "TEXT", docPosition);
+  string text = extractContentInTag(file, "TEXT", docTagStartPosition);
   removePunctuation(text);
   list<string> textWords = tokenize(text);
-  Document document = { extractContentInTag(file, "DOCNO", docPosition), headlineWords, textWords };
+  Document document = { extractContentInTag(file, "DOCNO", docTagStartPosition), headlineWords, textWords };
   return document;
 }
 
@@ -229,12 +229,12 @@ list<string> tokenize(string str) {
   return result;
 }
 
-string extractContentInTag(string fileString, string tag, int docPosition) {
+string extractContentInTag(string fileString, string tag, int docTagStartPosition) {
   string startTag = "<" + tag + ">";
   string endTag = "</" + tag + ">";
   string result;
-  int startPosition = fileString.find(startTag, docPosition) + startTag.size();
-  int length = fileString.find(endTag, docPosition) - startPosition;
+  int startPosition = fileString.find(startTag, docTagStartPosition) + startTag.size();
+  int length = fileString.find(endTag, docTagStartPosition) - startPosition;
   result = fileString.substr(startPosition, length);
   //TODO should move somewhere
   return result;
