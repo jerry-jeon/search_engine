@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
   } else {
     initializeStopwords();
 
-    //transformFilesInFolder("APW");
+    transformFilesInFolder("APW");
     transformFilesInFolder("NYT");
 
     endTimerAndPrint("구동시간-------------------------------------");
@@ -236,11 +236,12 @@ string extractContentInTag(string fileString, string tag, int docPosition) {
   int startPosition = fileString.find(startTag, docPosition) + startTag.size();
   int length = fileString.find(endTag, docPosition) - startPosition;
   result = fileString.substr(startPosition, length);
-  trim(result);
   //TODO should move somewhere
   return result;
 }
 
+// tokenize 과정에서 처리해주는 것으로 보임. 나중에 삭제
+// Deprecated
 void trim(string &str) {
   // trim right
   size_t found = str.find_last_not_of(whitespaces); 
