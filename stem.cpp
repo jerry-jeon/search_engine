@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
     initializeStopwords();
 
     //transformFile("APW", 1998, 6, 1);
-    transformFilesInFolder("APW");
-    //transformFilesInFolder("NYT");
+    //transformFilesInFolder("APW");
+    transformFilesInFolder("NYT");
 
     endTimerAndPrint("구동시간-------------------------------------");
     return 0;
@@ -219,7 +219,7 @@ Document parseToDocument(string file, int docTagStartPosition) {
 }
 
 void removePunctuation( string &str ) {
-  char* charsToRemove = "?()'`\",.;";
+  char* charsToRemove = "?()'`\",.;_";
   for (unsigned int  i = 0; i < strlen(charsToRemove); ++i) {
     str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end());
   }
