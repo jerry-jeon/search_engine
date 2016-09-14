@@ -185,11 +185,15 @@ string getFileIntoString(string fileName) {
 
 list<Document> parseToDocuments(string fileString) {
   list<Document> documentList;
-  for(int docTagStartPosition = findDOCTagPosition(fileString, 0); docTagStartPosition != string::npos; docTagStartPosition = findDOCTagPosition(fileString, docTagStartPosition)) {
+  int docTagStartPosition = findDOCTagPosition(fileString, 0);
+  while(docTagStartPosition != string::npos) {
     Document document = parseToDocument(fileString, docTagStartPosition);
     transformDocument(document);
     documentList.push_back(document);
+
+    docTagStartPosition = findDOCTagPosition(fileString, docTagStartPosition);
   }
+
   return documentList;
 }
 
@@ -200,14 +204,13 @@ int findDOCTagPosition(string fileString, int startPosition) {
   return result != string::npos ? result + startTag.length() : string::npos;
 }
 
+// TODO 여기서 바로 받으면서 처리해야 하는지. 속도는 빠르지만 코드 가독성이 낮아서 일단은 분리하는 방향으로 진행함.
 Document parseToDocument(string file, int docTagStartPosition) {
   string headline = extractContentInTag(file, "HEADLINE", docTagStartPosition);
   removePunctuation(headline);
-  list<string> headlineWords = tokenize(headline);
   string text = extractContentInTag(file, "TEXT", docTagStartPosition);
   removePunctuation(text);
-  list<string> textWords = tokenize(text);
-  Document document = { extractContentInTag(file, "DOCNO", docTagStartPosition), headlineWords, textWords };
+  Document document = { extractContentInTag(file, "DOCNO", docTagStartPosition), tokenize(headline), tokenize(text) };
   return document;
 }
 
