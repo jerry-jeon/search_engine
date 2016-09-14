@@ -259,13 +259,10 @@ void trim(string &str) {
 }
 
 void transformDocument(Document &document) {
-  removeStopwordInDocument(document);
-  stemDocument(document);
-}
-
-void removeStopwordInDocument(Document &document) {
-  removeStopword(document.textWords);
   removeStopword(document.headlineWords);
+  removeStopword(document.textWords);
+  stemWordList(document.headlineWords);
+  stemWordList(document.textWords);
 }
 
 void removeStopword(list<string> &words) {
@@ -274,11 +271,6 @@ void removeStopword(list<string> &words) {
     words.remove(*iter);
     iter++;
   }
-}
-
-void stemDocument(Document &document) {
-  stemWordList(document.headlineWords);
-  stemWordList(document.textWords);
 }
 
 void stemWordList(list<string> &words) {
