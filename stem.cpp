@@ -185,7 +185,7 @@ string getFileIntoString(string fileName) {
 
 list<Document> parseToDocuments(string fileString) {
   list<Document> documentList;
-  for(int docTagStartPosition = findDOCTagPosition(fileString, 0); docPosition != string::npos; docPosition = findDOCTagPosition(fileString, docPosition)) {
+  for(int docTagStartPosition = findDOCTagPosition(fileString, 0); docTagStartPosition != string::npos; docTagStartPosition = findDOCTagPosition(fileString, docTagStartPosition)) {
     Document document = parseToDocument(fileString, docTagStartPosition);
     transformDocument(document);
     documentList.push_back(document);
