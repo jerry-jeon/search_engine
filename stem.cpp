@@ -7,6 +7,7 @@
 #include <sstream>
 #include <regex>
 #include "porter2_stemmer.cpp"
+#include <map>
 
 #include <chrono> // this is for check execution time
 #include <ctime> // this is for check execution time
@@ -14,18 +15,26 @@
 using namespace std;
 using namespace std::chrono;
 
-struct Document {
+class Document {
   string docno;
   list<string> headlineWords;
   list<string> textWords;
-};
 
+  float tf(string term);
+  float idf(string term, list<Document> documents);
+  int termFrequency(string term) {
+
+  }
+  bool contain(string term);
+};
 
 stack<high_resolution_clock::time_point> startTimeStack;
 void startTimer();
 void endTimerAndPrint(string with);
 void logList(list<string> strings);
 string durationToString(long duration);
+void makeWordStatistics(list<string> words);
+void makeStemStatistics(list<string> stems);
 //these above functions and variables are for development.
 
 string inputDirectory, outputDirectory, stopwordsFile;
@@ -57,6 +66,58 @@ void stemWordList(list<string> &words);
 void writeDocumentToFile(string fileName, list<Document> document);
 string documentToString(Document document);
 string concatStringList(list<string> words);
+
+class StemStatistics {
+  public:
+  string stem;
+  list<string> words;
+  int count = 0;
+  
+  StemStatistics(string _stem) {
+    stem = _stem;
+  }
+
+  void addCount(string word) {
+    if(find(words.begin(), words.end(), word) == words.end())
+      words.push_back(word);
+    count++;
+  }
+
+  string to_string() {
+    return stem + " : " + concatStringList(words) + " " + std::to_string(count) + "번";
+  }
+
+  bool operator==(StemStatistics stemStatistics) {
+    return stem == stemStatistics.stem;
+  }
+};
+
+bool compareStemStatistics(StemStatistics s1, StemStatistics s2) {
+  return s1.count > s2.count;
+}
+
+list<StemStatistics> stemStatisticsList;
+void addStemStatistics(string stem, string word) {
+  list<StemStatistics>::iterator iter = find(stemStatisticsList.begin(), stemStatisticsList.end(), stem);
+  if(iter != stemStatisticsList.end()) {
+    iter->addCount(word);
+  } else {
+    StemStatistics stemStatistics (stem);
+    stemStatistics.addCount(word);
+    stemStatisticsList.push_back(stemStatistics);
+  }
+}
+
+void writeStemStatistics() {
+  stemStatisticsList.sort(compareStemStatistics);
+  ofstream outputFile ("stem_statistics");
+  list<StemStatistics>::iterator iter = stemStatisticsList.begin();
+  while( iter != stemStatisticsList.end()) {
+    outputFile << iter->to_string() << endl;
+    iter++;
+  }
+  outputFile.close();
+}
 
 void startTimer() {
   startTimeStack.push(high_resolution_clock::now());
@@ -102,9 +163,10 @@ int main(int argc, char *argv[]) {
   } else {
     initializeStopwords();
 
-    //transformFile("APW", 1998, 6, 1);
+    transformFile("APW", 2000, 9, 30);
+    transformFile("APW", 2000, 8, 30);
     //transformFilesInFolder("APW");
-    transformFilesInFolder("NYT");
+    //transformFilesInFolder("NYT");
 
     endTimerAndPrint("구동시간-------------------------------------");
     return 0;
@@ -199,7 +261,7 @@ list<Document> parseToDocuments(string fileString) {
   }
 
   return documentList;
-}
+}   
 
 // return npos if doc doens't exist
 int findDOCTagPosition(string fileString, int startPosition) {
@@ -293,8 +355,10 @@ void removeStopword(list<string> &words) {
 void stemWordList(list<string> &words) {
   list<string>::iterator iter = words.begin();
   while( iter != words.end()) {
+    string word = *iter;
     Porter2Stemmer::trim(*iter);
     Porter2Stemmer::stem(*iter);
+    addStemStatistics(*iter, word);
     iter++;
   }
 }
@@ -307,6 +371,7 @@ void writeDocumentToFile(string fileName, list<Document> documentList) {
     iter++;
   }
   outputFile.close();
+  writeStemStatistics();
 }
 
 string documentToString(Document document) {
