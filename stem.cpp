@@ -13,60 +13,6 @@
 
 using namespace std;
 using namespace std::chrono;
-string concatStringList(list<string> words);
-list<string> stopwords;
-class StemStatistics {
-  public:
-  string stem;
-  list<string> words;
-  int count = 0;
-
-  StemStatistics(string _stem) {
-    stem = _stem;
-  }
-
-  void addCount(string word) {
-    if(find(words.begin(), words.end(), word) == words.end())
-      words.push_back(word);
-    count++;
-  }
-
-  string to_string() {
-    return stem + " : " + concatStringList(words) + " " + std::to_string(count) + "번";
-  }
-
-  bool operator==(StemStatistics stemStatistics) {
-    return stem == stemStatistics.stem;
-  }
-};
-
-bool compareStemStatistics(StemStatistics s1, StemStatistics s2) {
-  return s1.count > s2.count;
-}
-
-list<StemStatistics> stemStatisticsList;
-void addStemStatistics(string stem, string word) {
-  list<StemStatistics>::iterator iter = find(stemStatisticsList.begin(), stemStatisticsList.end(), stem);
-  if(iter != stemStatisticsList.end()) {
-    iter->addCount(word);
-  } else {
-    StemStatistics stemStatistics (stem);
-    stemStatistics.addCount(word);
-    stemStatisticsList.push_back(stemStatistics);
-  }
-}
-
-void writeStemStatistics() {
-  stemStatisticsList.sort(compareStemStatistics);
-  ofstream outputFile ("stem_statistics");
-  list<StemStatistics>::iterator iter = stemStatisticsList.begin();
-  while( iter != stemStatisticsList.end()) {
-    outputFile << iter->to_string() << endl;
-    iter++;
-  }
-  outputFile.close();
-}
-string whitespaces (" \t\f\v\n\r");
 #include "document.cpp"
 
 stack<high_resolution_clock::time_point> startTimeStack;
@@ -86,16 +32,12 @@ string makeFileName(string type, int year, int month, int day);
 string getFileIntoString(string fileName);
 void transformFilesInFolder(string type);
 void transformFile(string type, int year, int month, int day);
-void transformDocument(Document &document);
 int findDOCTagPosition(string fileString, int startPosition);
 
-list<string> tokenize(string str);
 list<Document> parseToDocuments(string fileString);
 Document parseToDocument(string file, int docTagStartPosition);
 string extractContentInTag(string fileString, string tag, int docTagStartPosition);
-
 void writeDocumentToFile(string fileName, list<Document> document);
-string documentToString(Document document);
 
 
 void startTimer() {
@@ -169,6 +111,7 @@ int handleArguments(int argc, char* argv[]) {
 }
 
 void initializeStopwords() {
+  list<string> stopwords;
   string line;
   ifstream file (stopwordsFile);
   if(file.is_open()) {
@@ -178,6 +121,7 @@ void initializeStopwords() {
     }
     file.close();
   }
+  Document::stopwords = stopwords;
 }
 
 
@@ -249,9 +193,10 @@ int findDOCTagPosition(string fileString, int startPosition) {
 }
 
 Document parseToDocument(string file, int docTagStartPosition) {
+  string docno = extractContentInTag(file, "DOCNO", docTagStartPosition);
   string headline = extractContentInTag(file, "HEADLINE", docTagStartPosition);
   string text = extractContentInTag(file, "TEXT", docTagStartPosition);
-  return Document (headline, text);
+  return Document (docno, headline, text);
 }
 
 string extractContentInTag(string fileString, string tag, int docTagStartPosition) {
@@ -275,13 +220,3 @@ void writeDocumentToFile(string fileName, list<Document> documentList) {
   writeStemStatistics();
 }
 
-string concatStringList(list<string> words) {
-  string result;
-  list<string>::iterator iter = words.begin();
-  result = *iter++;
-  while( iter != words.end()) {
-    result += " " + *iter;
-    iter++;
-  }
-  return result;
-}

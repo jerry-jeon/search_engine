@@ -11,6 +11,7 @@
 
 #include <chrono> // this is for check execution time
 #include <ctime> // this is for check execution time
+#include "stem_statistics.cpp"
 
 void removePunctuation( string &str );
 void removeNumberWords( list<string> &words );
@@ -19,26 +20,27 @@ void stemWordList(list<string> &words);
 
 class Document {
   public:
+    static list<string> stopwords;
     string docno;
     list<string> headlineWords;
     list<string> textWords;
     map<string, int> frequencies;
     list<string> headlineStems;
     list<string> textStems;
+    int maxFrequency = 0;
 
-    Document(string headline, string text) {
+    Document(string _docno, string headline, string text) {
+      docno = _docno;
       removePunctuation(headline);
       removePunctuation(text);
       headlineWords = tokenize(headline);
       textWords = tokenize(text);
     }
 
-    //tokenize 하면서 hash에 넣는거까지
-
     list<string> tokenize(string str);
     float tf(string term);
     float idf(string term, list<Document> documents);
-    int termFrequency(string term);
+    float termFrequency(string term);
     bool contain(string term);
     void transform();
 
@@ -46,13 +48,20 @@ class Document {
     string to_string();
 };
 
+list<string> Document::stopwords = {};
+
 list<string> Document::tokenize(string str) {
+  cout << docno << endl;
   list<string> result;
   istringstream iss(str);
   do {
     string temp;
     iss >> temp;
-    frequencies[temp]++;
+    // 메소드로 분리하는게 좋을듯
+    if(maxFrequency < ++frequencies[temp]) {
+      maxFrequency = frequencies[temp];
+      cout << temp << " : " << frequencies[temp] << endl;
+    }
     result.push_back(temp);
   } while(iss);
   return result;
@@ -95,8 +104,8 @@ void removeNumberWords( list<string> &words ) {
 }
 
 void removeStopword(list<string> &words) {
-  list<string>::iterator iter = stopwords.begin();
-  while( iter != stopwords.end()) {
+  list<string>::iterator iter = Document::stopwords.begin();
+  while( iter != Document::stopwords.end()) {
     words.remove(*iter);
     iter++;
   }
@@ -116,6 +125,7 @@ void stemWordList(list<string> &words) {
 // tokenize 과정에서 처리해주는 것으로 보임. 나중에 삭제
 // Deprecated
 void trim(string &str) {
+  string whitespaces (" \t\f\v\n\r");
   // trim right
   size_t found = str.find_last_not_of(whitespaces);
   if (found!=string::npos) {
@@ -135,4 +145,8 @@ string Document::to_string() {
   result += "[HEADLINE] : " + concatStringList(headlineWords) + "\n";
   result += "[TEXT] : " + concatStringList(textWords) + "\n";
   return result;
+}
+
+float Document::termFrequency(string term) {
+  //frequencies[temp] / 
 }
