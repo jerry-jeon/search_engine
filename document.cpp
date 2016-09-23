@@ -1,4 +1,5 @@
 #include <stack>
+#include <algorithm>
 #include <cstdio>
 #include <list>
 #include <iostream>
@@ -15,8 +16,8 @@
 
 void removePunctuation( string &str );
 void removeNumberWords( list<string> &words );
-void removeStopword(list<string> &words);
-void stemWordList(list<string> &words);
+bool isStopword(string word);
+void stem(list<string> &stemList, list<string> words);
 
 class Document {
   public:
@@ -38,46 +39,40 @@ class Document {
     }
 
     list<string> tokenize(string str);
-    float tf(string term);
-    float idf(string term, list<Document> documents);
     float termFrequency(string term);
+    float idf(string term, list<Document> documents);
+    float tfidf(string term, list<Document> documents);
     bool contain(string term);
     void transform();
 
-    //TODO ignoreCase 하게 짜야함
     string to_string();
 };
+
 
 list<string> Document::stopwords = {};
 
 list<string> Document::tokenize(string str) {
-  cout << docno << endl;
   list<string> result;
   istringstream iss(str);
   do {
     string temp;
     iss >> temp;
-    // 메소드로 분리하는게 좋을듯
+    // make lowercase for remove stopword
+    ::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
+    if(isStopword(temp))
+      continue;
+    // TODO 메소드로 분리하는게 좋을듯(max frequency 구하는 부분)
     if(maxFrequency < ++frequencies[temp]) {
       maxFrequency = frequencies[temp];
-      cout << temp << " : " << frequencies[temp] << endl;
     }
     result.push_back(temp);
   } while(iss);
   return result;
   
-  /*
-  if(iter != stemStatisticsList.end()) {
-    iter->addCount(word);
-  } else {
-    StemStatistics stemStatistics (stem);
-    stemStatistics.addCount(word);
-    stemStatisticsList.push_back(stemStatistics);
-  }*/
 }
 
 void removePunctuation( string &str ) {
-  char* charsToRemove = "?()'`\",.;_";
+  char* charsToRemove = "?()'`\",.;_:";
   for (unsigned int  i = 0; i < strlen(charsToRemove); ++i) {
     str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end());
   }
@@ -86,10 +81,11 @@ void removePunctuation( string &str ) {
 void Document::transform() {
   removeNumberWords(headlineWords);
   removeNumberWords(textWords);
-  removeStopword(headlineWords);
-  removeStopword(textWords);
-  stemWordList(headlineWords);
-  stemWordList(textWords);
+  stem(headlineStems, headlineWords);
+  stem(textStems, textWords);
+
+  //headlineWords.unique();
+  //textStems.unique();
 }
 
 void removeNumberWords( list<string> &words ) {
@@ -103,20 +99,26 @@ void removeNumberWords( list<string> &words ) {
   }
 }
 
-void removeStopword(list<string> &words) {
+bool isStopword(string word) {
   list<string>::iterator iter = Document::stopwords.begin();
   while( iter != Document::stopwords.end()) {
-    words.remove(*iter);
+    if(word == *iter)
+      return true;
     iter++;
   }
+  return false;
 }
 
-void stemWordList(list<string> &words) {
+void stem(list<string> &stemList, list<string> words) {
   list<string>::iterator iter = words.begin();
   while( iter != words.end()) {
     string word = *iter;
-    Porter2Stemmer::trim(*iter);
-    Porter2Stemmer::stem(*iter);
+    Porter2Stemmer::trim(word);
+    Porter2Stemmer::stem(word);
+    // TODO 옮기자!!!!!
+    if(!word.empty()) {
+      stemList.push_back(word);
+    }
     //addStemStatistics(*iter, word);
     iter++;
   }
@@ -142,11 +144,50 @@ void trim(string &str) {
 string Document::to_string() {
   string result = "";
   result += "[DOCNO] : " + docno + "\n";
-  result += "[HEADLINE] : " + concatStringList(headlineWords) + "\n";
-  result += "[TEXT] : " + concatStringList(textWords) + "\n";
+  result += "[HEADLINE] : " + concatStringList(headlineStems) + "\n";
+  result += "[TEXT] : " + concatStringList(textStems) + "\n";
+
   return result;
 }
 
 float Document::termFrequency(string term) {
-  //frequencies[temp] / 
+  //augmented frequency, to prevent a bias towards longer documents
+  return 0.5f + (0.5f * (float)frequencies[term] / (float)maxFrequency);
+}
+
+bool Document::contain(string term) {
+  return frequencies.find(term) != frequencies.end();
+}
+
+float Document::idf(string term, list<Document> documents) {
+  int termAppearedDocumentNumber = 0;
+  list<Document>::iterator iter = documents.begin();
+  while( iter != documents.end()) {
+    if(iter->contain(term))
+      termAppearedDocumentNumber++;
+    iter++;
+  }
+
+  return log10(documents.size() / (termAppearedDocumentNumber + 1));
+}
+
+float Document::tfidf(string term, list<Document> documents) {
+  return termFrequency(term) * idf(term, documents);
+}
+
+void writeHighRankedTfIdfWords(list<Document> documentList) {
+  ofstream outputFile ("tfidf");
+  list<Document>::iterator iter = documentList.begin();
+  while( iter != documentList.end()) {
+    map<string, int>::iterator wordIter = iter->frequencies.begin();
+    while( wordIter != iter->frequencies.end()) {
+      float tfidf = iter->tfidf(wordIter->first, documentList);
+      if(tfidf < 0.2)
+        outputFile << wordIter->first << " : " <<  tfidf << endl;
+      wordIter++;
+    }
+    iter++;
+  }
+  outputFile.close();
+  
 }

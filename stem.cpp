@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     initializeStopwords();
 
     transformFile("APW", 2000, 9, 30);
-    //transformFile("APW", 2000, 8, 30);
+    //transformFile("NYT", 2000, 8, 30);
     //transformFilesInFolder("APW");
     //transformFilesInFolder("NYT");
 
@@ -97,6 +97,7 @@ int main(int argc, char *argv[]) {
 
 // return -1 if argument is not valid
 int handleArguments(int argc, char* argv[]) {
+  /*
   if(argc < 4) {
     cout << "다음의 형태로 사용해주세요" << endl;
     cout << argv[0] << " input폴더 output폴더 stopword파일" << endl;
@@ -107,7 +108,11 @@ int handleArguments(int argc, char* argv[]) {
     outputDirectory = argv[2];
     stopwordsFile = argv[3];
     return 0;
-  }
+  }*/
+  inputDirectory = "input/";
+  outputDirectory = "output/";
+  stopwordsFile = "stopwords.txt";
+  return 1;
 }
 
 void initializeStopwords() {
@@ -217,6 +222,8 @@ void writeDocumentToFile(string fileName, list<Document> documentList) {
     iter++;
   }
   outputFile.close();
-  writeStemStatistics();
+  // 통계내기위한 코드
+  //writeHighRankedTfIdfWords(documentList);
+  //writeStemStatistics();
 }
 
