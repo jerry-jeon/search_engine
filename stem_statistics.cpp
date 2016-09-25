@@ -11,6 +11,7 @@
 #include <chrono> // this is for check execution time
 #include <ctime> // this is for check execution time
 
+// dummy
 string concatStringList(list<string> words);
 class StemStatistics {
   public:
