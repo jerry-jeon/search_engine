@@ -11,9 +11,10 @@
 #include <chrono> // this is for check execution time
 #include <ctime> // this is for check execution time
 
+#include "document.h"
 using namespace std;
 using namespace std::chrono;
-#include "document.cpp"
+
 
 stack<high_resolution_clock::time_point> startTimeStack;
 void startTimer();
@@ -155,9 +156,9 @@ void transformFile(string type, int year, int month, int day) {
 string makeFileName(string type, int year, int month, int day) {
   char buffer[100];
   if(type == "APW") {
-    std::sprintf(buffer, "%d%02d%02d_APW_ENG", year, month, day);
+    std::snprintf(buffer, sizeof(buffer), "%d%02d%02d_APW_ENG", year, month, day);
   } else if(type == "NYT") {
-    std::sprintf(buffer, "%d%02d%02d_NYT", year, month, day);
+    std::snprintf(buffer, sizeof(buffer), "%d%02d%02d_NYT", year, month, day);
   } else {
     //TODO throw error
   }
