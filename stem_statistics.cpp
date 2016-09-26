@@ -33,41 +33,41 @@ bool StemStatistics::operator==(StemStatistics stemStatistics) {
 }
 
 bool compareStemStatistics(StemStatistics s1, StemStatistics s2) {
-  return s1.count > s2.count;
+	return s1.count > s2.count;
 }
 list<StemStatistics> stemStatisticsList;
 string concatStringList(list<string> words) {
-  string result;
-  list<string>::iterator iter = words.begin();
-  result = *iter++;
-  while( iter != words.end()) {
-    result += " " + *iter;
-    iter++;
-  }
-  return result;
+	string result;
+	list<string>::iterator iter = words.begin();
+	result = *iter++;
+	while( iter != words.end()) {
+		result += " " + *iter;
+		iter++;
+	}
+	return result;
 }
 
 void addStemStatistics(string stem, string word) {
-  list<StemStatistics>::iterator iter = find(stemStatisticsList.begin(), stemStatisticsList.end(), stem);
-  if(iter != stemStatisticsList.end()) {
-    iter->addCount(word);
-  } else {
-    StemStatistics stemStatistics (stem);
-    stemStatistics.addCount(word);
-    stemStatisticsList.push_back(stemStatistics);
-  }
+	list<StemStatistics>::iterator iter = find(stemStatisticsList.begin(), stemStatisticsList.end(), stem);
+	if(iter != stemStatisticsList.end()) {
+		iter->addCount(word);
+	} else {
+		StemStatistics stemStatistics (stem);
+		stemStatistics.addCount(word);
+		stemStatisticsList.push_back(stemStatistics);
+	}
 }
 
 void writeStemStatistics() {
 	// TODO 전역변수 삭제
 	/*
-  stemStatisticsList.sort(compareStemStatistics);
-  ofstream outputFile ("stem_statistics");
-  list<StemStatistics>::iterator iter = stemStatisticsList.begin();
-  while( iter != stemStatisticsList.end()) {
-    outputFile << iter->to_string() << endl;
-    iter++;
-  }
-  outputFile.close();
-  */
+	stemStatisticsList.sort(compareStemStatistics);
+	ofstream outputFile ("stem_statistics");
+	list<StemStatistics>::iterator iter = stemStatisticsList.begin();
+	while( iter != stemStatisticsList.end()) {
+		outputFile << iter->to_string() << endl;
+		iter++;
+	}
+	outputFile.close();
+	*/
 }
