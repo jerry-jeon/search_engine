@@ -11,6 +11,7 @@
 #include <regex>
 #include "porter2_stemmer.h"
 #include <map>
+#include <cmath>
 
 #include <chrono> // this is for check execution time
 #include <ctime> // this is for check execution time
