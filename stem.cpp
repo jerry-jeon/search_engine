@@ -89,10 +89,10 @@ int main(int argc, char *argv[]) {
 		startTimer();
 		initializeStopwords();
 
-		transformFile("APW", 2000, 9, 30);
+		//transformFile("APW", 2000, 9, 30);
 		//transformFile("NYT", 2000, 8, 30);
-		//transformFilesInFolder("APW");
-		//transformFilesInFolder("NYT");
+		transformFilesInFolder("APW");
+		transformFilesInFolder("NYT");
 		
 		//writeTermInfoFile();
 		writeDocDataFile();

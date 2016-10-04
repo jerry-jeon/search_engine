@@ -35,11 +35,11 @@ Document::Document(string _docno, string headline, string text) {
 list<string> Document::tokenize(string str) {
 	list<string> result;
 	char * c_str = strdup(str.c_str());
-	char * tokenizer = " -.,\"'\n\t";
+	char * tokenizer = " -.,\"'\n\t:";
+	//char * tokenizer = " -\n";
 
 	for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
 		string temp = string(ptr);
-		cout << ptr << endl;
 		::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 		if(isStopword(temp))
 			continue;
@@ -65,14 +65,13 @@ void Document::addWord(string temp) {
 void Document::addDf() {
 	map<string, int>::iterator iter = termFrequencies.begin();
 	while( iter != termFrequencies.end()) {
-		cout << iter->first << endl;
 		documentFrequencies[iter->first]++;
 		iter++;
 	}
 }
 
 void removePunctuation( string &str ) {
-	char* charsToRemove = "?()'`\",.;_:";
+	char* charsToRemove = "?()`;*$";
 	for (unsigned int  i = 0; i < strlen(charsToRemove); ++i) {
 		str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end());
 	}
