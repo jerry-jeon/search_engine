@@ -34,18 +34,19 @@ Document::Document(string _docno, string headline, string text) {
 
 list<string> Document::tokenize(string str) {
 	list<string> result;
-	istringstream iss(str);
-	do {
-		string temp;
-		iss >> temp;
-		// make lowercase for remove stopword
+	char * c_str = strdup(str.c_str());
+	char * tokenizer = " -.,\"'\n\t";
+
+	for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
+		string temp = string(ptr);
+		cout << ptr << endl;
 		::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
 		if(isStopword(temp))
 			continue;
 		result.push_back(temp);
-	} while(iss);
+	}
+
 	return result;
-	
 }
 
 void Document::addWord(string temp) {
@@ -64,6 +65,7 @@ void Document::addWord(string temp) {
 void Document::addDf() {
 	map<string, int>::iterator iter = termFrequencies.begin();
 	while( iter != termFrequencies.end()) {
+		cout << iter->first << endl;
 		documentFrequencies[iter->first]++;
 		iter++;
 	}

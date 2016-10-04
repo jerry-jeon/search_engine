@@ -157,9 +157,10 @@ void transformFile(string type, int year, int month, int day) {
 		while( iter != documentList.end()) {
 			//iter->makeDocInfoFile();
 			iter->writeTFFile();
+			iter->addDf();
 			iter++;
 		}
-		writeDocInfoFile(fileName, documentList); // first homework
+		//writeDocInfoFile(fileName, documentList); // first homework
 		endTimerAndPrint("refine complete " + fileName);
 	}
 }
@@ -275,10 +276,10 @@ void writeDocDataFile() {
 	docno = token[1];
 
 	while(getline(file, line)) {
-		vector<string> token;
+		vector<string> docToken;
 		stringstream linestream(line);
 		for(string item; getline(linestream, item, '\t');) {
-			token.push_back(item);
+			docToken.push_back(item);
 		}
 		if(docno != token[1]) { // different document
 			map<string, int>::iterator iter = termFrequencies.begin();
