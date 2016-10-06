@@ -17,13 +17,12 @@
 
 list<string> Document::stopwords = {};
 string Document::outputDirectory = "";
-int Document::idMaker = 0;
-int WordInfo::lastId = 0;
+int Document::documentNumber = 0;
 map<string, int> Document::collectionFrequencies;
 map<string, int> Document::documentFrequencies;
 
 Document::Document(string _docno, string headline, string text) {
-	id = ++idMaker;
+	id = ++documentNumber;
 	docno = _docno;
 	removePunctuation(headline);
 	removePunctuation(text);
@@ -31,11 +30,14 @@ Document::Document(string _docno, string headline, string text) {
 	textWords = tokenize(text);
 }
 
+int Document::getDocumentNumber() {
+	return documentNumber;
+}
+
 list<string> Document::tokenize(string str) {
 	list<string> result;
 	char * c_str = strdup(str.c_str());
-	char * tokenizer = " -.,\"'\n\t:";
-	//char* tokenizer = " -\n\t,.:_()'`\"/";
+	char* tokenizer = " -\n\t,.:_()'`\"/{}[]";
 
 	for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
 		string temp = string(ptr);
@@ -49,20 +51,8 @@ list<string> Document::tokenize(string str) {
 	return result;
 }
 
-void Document::addWord(string temp) {
-	collectionFrequencies[temp]++;
 
-	// 보고서에 써야징 - 여기서 하면 매번 모든 key를 검색하니 비효율. 나중에 한번에 df 추가하는게 나음.
-	/*if(document.termFrequencies[temp] == 0) {
-		df[wordId]++;
-	}*/
-
-	if(maxFrequency < ++termFrequencies[temp]) {
-		maxFrequency = termFrequencies[temp];
-	}
-}
-
-void Document::addDf() {
+void Document::increaseDocumentFrequency() {
 	map<string, int>::iterator iter = termFrequencies.begin();
 	while( iter != termFrequencies.end()) {
 		documentFrequencies[iter->first]++;
@@ -71,7 +61,7 @@ void Document::addDf() {
 }
 
 void removePunctuation( string &str ) {
-	char* charsToRemove = "?()`;*$"; // <>
+	char* charsToRemove = "%#!?;*$\\+@="; // <>
 	for (unsigned int  i = 0; i < strlen(charsToRemove); ++i) {
 		str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end());
 	}
@@ -117,25 +107,21 @@ void Document::stem(list<string> &stemList, list<string> words) {
 		// TODO 옮기자!!!!!
 		if(!word.empty()) {
 			stemList.push_back(word);
+			collectionFrequencies[word]++;
+			termFrequencies[word]++;
 		}
-		addWord(word);
+
 		iter++;
 	}
 }
 
-string Document::to_string() {
-	string result = "";
-	result += "[DOCNO] : " + docno + "\n";
-	result += "[HEADLINE] : " + concatStringList(headlineStems) + "\n";
-	result += "[TEXT] : " + concatStringList(textStems) + "\n";
-
-	return result;
+void Document::writeDocInfoFile() {
+	ofstream outputFile (outputDirectory + "/doc.dat", ios_base::app);
+	outputFile.close();
 }
 
-void Document::makeDocInfoFile() {
-	ofstream outputFile (outputDirectory + "/doc.dat", ios_base::app);
-	outputFile << id << "\t" << docno << "\t" << termFrequencies.size() << "\t" << denominator << endl;
-	outputFile.close();
+string Document::toString() {
+	return to_string(id) + "\t" + docno + "\t" + to_string(termFrequencies.size()) + "\t";
 }
 
 void Document::calculateDenominator(float dValue) { // tf idf formula's denominator
@@ -145,15 +131,6 @@ void Document::calculateDenominator(float dValue) { // tf idf formula's denomina
 		iter++;
 	}
 	denominator = sqrt(denominator);
-}
-void Document::writeTFFile() {
-	ofstream outputFile (outputDirectory + "tf.dat", ios_base::app);
-	map<string, int>::iterator iter = termFrequencies.begin();
-	while( iter != termFrequencies.end()) {
-		outputFile << id << "\t" << docno << "\t" << iter->first << "\t" << iter->second << endl;
-		iter++;
-	}
-	outputFile.close();
 }
 
 string concatStringList(list<string> words) {

@@ -22,7 +22,7 @@ int handleArguments(int argc, char* argv[]);
 void initializeStopwords();
 
 string makeFileName(string type, int year, int month, int day);
-string getFileIntoString(string fileName);
+string getFileIntoString(string directory, string fileName);
 void transformFilesInFolder(string type);
 void transformFile(string type, int year, int month, int day);
 int findDOCTagPosition(string fileString, int startPosition);
@@ -31,7 +31,6 @@ void parseToDocuments(string fileString);
 Document parseToDocument(string file, int docTagStartPosition);
 string extractContentInTag(string fileString, string tag, int docTagStartPosition);
 list<Document> documentList;
-void writeDocInfoFile(string fileName, list<Document> document);
 void writeTermInfoFile(); 
 void writeIndexFile();
 void writeDocDataFile();
@@ -50,10 +49,16 @@ int main(int argc, char *argv[]) {
 		//transformFilesInFolder("NYT");
 		
 		//writeTermInfoFile();
+		cout << "Start cacluate denimonator and write document file..." << endl;
+		startTimer();
 		writeDocDataFile();
+		endTimerAndPrint("Writing document file -------------------------------------");
+		startTimer();
+		cout << "Start write index and term file..." << endl;
 		writeIndexFile();
+		endTimerAndPrint("Writing index file -------------------------------------");
 
-		endTimerAndPrint("구동시간-------------------------------------");
+		endTimerAndPrint("All time -------------------------------------");
 		return 0;
 	}
 
@@ -103,13 +108,13 @@ void transformFilesInFolder(string type) {
 
 void transformFile(string type, int year, int month, int day) {
 	string fileName = makeFileName(type, year, month, day);
-	string fileString = getFileIntoString(inputDirectory + type + "/" + to_string(year) + "/" + fileName);
+	string fileString = getFileIntoString(inputDirectory + type + "/" + to_string(year) + "/", fileName);
 
 	if(fileString != "") {
 		startTimer();
 		parseToDocuments(fileString);
 
-		endTimerAndPrint("refine complete " + fileName);
+		endTimerAndPrint("Refine complete - " + fileName);
 	}
 }
 
@@ -126,13 +131,13 @@ string makeFileName(string type, int year, int month, int day) {
 }
 
 
-string getFileIntoString(string fileName) {
+string getFileIntoString(string directory, string fileName) {
 	string line, result = "";
-	ifstream file (fileName);
+	ifstream file (directory + fileName);
 	if(file.is_open()) {
 		result.assign( (istreambuf_iterator<char>(file) ), (istreambuf_iterator<char>()));
 		file.close();
-		cout << "read complete " << fileName << endl;
+		cout << "Read complete - " << fileName << endl;
 	}
 	return result;
 }
@@ -142,8 +147,8 @@ void parseToDocuments(string fileString) {
 	while(docTagStartPosition != string::npos) {
 		Document document = parseToDocument(fileString, docTagStartPosition);
 		document.transform();
+		document.increaseDocumentFrequency();
 		documentList.push_back(document);
-		document.addDf();
 
 		docTagStartPosition = findDOCTagPosition(fileString, docTagStartPosition);
 	}
@@ -184,31 +189,20 @@ void writeTermInfoFile() {
 	outputFile.close();
 } 
 
-void writeDocInfoFile(string fileName, list<Document> documentList) {
-	ofstream outputFile (outputDirectory + fileName);
-	list<Document>::iterator iter = documentList.begin();
-	while( iter != documentList.end()) {
-		outputFile << iter->to_string() << endl;
-		iter++;
-	}
-	outputFile.close();
-}
-
 void writeDocDataFile() {
 	ofstream documentFile (outputDirectory + "/doc.dat");
 	list<Document>::iterator documentIterator = documentList.begin();
-	int documentNumber = Document::idMaker;
 	while( documentIterator != documentList.end()) {
 		float denominator = 0.0f;
 		map<string, int>::iterator tfIterator = documentIterator->termFrequencies.begin();
 		while( tfIterator != documentIterator->termFrequencies.end()) {
 			int documentFrequency = Document::documentFrequencies[tfIterator->first];
-			float dValue =	log(documentNumber / documentFrequency);
+			float dValue =	log(Document::getDocumentNumber() / documentFrequency);
 
 			denominator += pow((log(tfIterator->second) + 1.0f) * dValue, 2.0f);
 			tfIterator++;
 		}
-		documentFile << documentIterator->id << '\t' << documentIterator->docno << '\t' << documentIterator->termFrequencies.size() << endl;
+		documentFile << documentIterator->toString() << endl;
 		documentIterator->denominator = sqrt(denominator);
 		documentIterator++;
 	}
@@ -226,8 +220,7 @@ void writeIndexFile() { // and term.dat
 		string word = wordIterator->first;
 		
 		int documentFrequency = Document::documentFrequencies[word]; // should change
-		int documentNumber = Document::idMaker;
-		float dValue =	log(documentNumber / documentFrequency);
+		float dValue =	log(Document::getDocumentNumber() / documentFrequency);
 
 		list<Document>::iterator documentIterator = documentList.begin();
 		while( documentIterator != documentList.end()) {
