@@ -46,7 +46,7 @@ list<string> Document::tokenize(string str) {
 		result.push_back(temp);
 	}
 
-	free(cstr);
+	free(c_str);
 	return result;
 }
 
