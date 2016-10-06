@@ -1,0 +1,4 @@
+/resources/input/*
+/output/*
+/backup/*
+*.out
