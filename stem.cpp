@@ -1,3 +1,6 @@
+#include "document.h"
+#include "util.h"
+
 #include <stack>
 #include <cstdio>
 #include <list>
@@ -10,20 +13,9 @@
 #include <cmath>
 #include <iomanip>
 
-#include <chrono> // this is for check execution time
-#include <ctime> // this is for check execution time
-
-#include "document.h"
+using namespace util;
 using namespace std;
 using namespace std::chrono;
-
-
-stack<high_resolution_clock::time_point> startTimeStack;
-void startTimer();
-void endTimerAndPrint(string with);
-void logList(list<string> strings);
-string durationToString(long duration);
-//these above functions and variables are for development.
 
 string inputDirectory, outputDirectory, stopwordsFile;
 int handleArguments(int argc, char* argv[]);
@@ -44,42 +36,6 @@ void writeTermInfoFile();
 void writeIndexFile();
 void writeDocDataFile();
 
-
-void startTimer() {
-	startTimeStack.push(high_resolution_clock::now());
-}
-
-void endTimerAndPrint(string with) {
-	auto duration = duration_cast<milliseconds>( high_resolution_clock::now() - startTimeStack.top() ).count();
-	cout << with << endl;
-	cout << durationToString(duration) << endl;
-	startTimeStack.pop();
-}
-
-string durationToString(long duration) {
-	string result = "";
-	int deciSecond = (duration / 100) % 10;
-	int second = (duration / 1000) % 60;
-	int minute = (duration / (1000 * 60)) % 60;
-	int hour = (duration / (1000 * 60 * 60)) % 24;
-
-	if(hour > 0)
-		result += to_string(hour) + "시간 ";
-	if(minute > 0)
-		result += to_string(minute) + "분 ";
-	result += to_string(second) + "." + to_string(deciSecond) + "초 걸렸습니다.";
-
-	return result;
-}
-
-void logList(list<string> strings) {
-	list<string>::iterator iter = strings.begin();
-	while( iter != strings.end()) {
-		cout << *iter << endl;
-		iter++;
-	}
-}
-//these above functions are for development.
 
 int main(int argc, char *argv[]) {
 	if(handleArguments(argc, argv) == -1) {
@@ -251,7 +207,6 @@ void writeDocDataFile() {
 
 			denominator += pow((log(tfIterator->second) + 1.0f) * dValue, 2.0f);
 			tfIterator++;
-			cout << denominator << endl;
 		}
 		documentFile << documentIterator->id << '\t' << documentIterator->docno << '\t' << documentIterator->termFrequencies.size() << endl;
 		documentIterator->denominator = sqrt(denominator);
