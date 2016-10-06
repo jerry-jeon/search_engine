@@ -36,7 +36,7 @@ list<string> Document::tokenize(string str) {
 	list<string> result;
 	char * c_str = strdup(str.c_str());
 	char * tokenizer = " -.,\"'\n\t:";
-	//char * tokenizer = " -\n";
+	//char* tokenizer = " -\n\t,.:_()'`\"/";
 
 	for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
 		string temp = string(ptr);
@@ -46,6 +46,7 @@ list<string> Document::tokenize(string str) {
 		result.push_back(temp);
 	}
 
+	free(cstr);
 	return result;
 }
 
@@ -71,7 +72,7 @@ void Document::addDf() {
 }
 
 void removePunctuation( string &str ) {
-	char* charsToRemove = "?()`;*$";
+	char* charsToRemove = "?()`;*$"; // <>
 	for (unsigned int  i = 0; i < strlen(charsToRemove); ++i) {
 		str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end());
 	}
@@ -218,5 +219,5 @@ void writeHighRankedTfIdfWords(list<Document> documentList) {
 		iter++;
 	}
 	outputFile.close();
-	
+
 }*/
