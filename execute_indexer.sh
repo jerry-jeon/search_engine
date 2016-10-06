@@ -8,8 +8,10 @@ rm output/term.dat > /dev/null 2>&1
 rm output/tf.dat > /dev/null 2>&1
 rm output/index.dat > /dev/null 2>&1
 
-g++ -std=c++11 *.cpp && ./a.out resources/input/ output/ resources/stopwords.txt
-rm ./a.out
+if g++ -std=c++11 *.cpp && ./a.out resources/input/ output/ resources/stopwords.txt; then
+	echo "Start execution"
+fi
+rm ./a.out > /dev/null 2>&1
 
 open output/doc.dat > /dev/null 2>&1
 open output/term.dat > /dev/null 2>&1

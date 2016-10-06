@@ -1,4 +1,3 @@
-#include "stem_statistics.h"
 #include "document.h"
 #include <stack>
 #include <algorithm>
@@ -120,27 +119,9 @@ void Document::stem(list<string> &stemList, list<string> words) {
 			stemList.push_back(word);
 		}
 		addWord(word);
-		//addStemStatistics(*iter, word);
 		iter++;
 	}
 }
-
-// tokenize 과정에서 처리해주는 것으로 보임. 나중에 삭제
-// Deprecated
-void trim(string &str) {
-	string whitespaces (" \t\f\v\n\r");
-	// trim right
-	size_t found = str.find_last_not_of(whitespaces);
-	if (found!=string::npos) {
-		str.erase(found+1);
-	}else {
-		str.clear();
-	}
-
-	// trim left
-	str.erase(0, str.find_first_not_of(whitespaces));
-}
-
 
 string Document::to_string() {
 	string result = "";
@@ -155,9 +136,6 @@ void Document::makeDocInfoFile() {
 	ofstream outputFile (outputDirectory + "/doc.dat", ios_base::app);
 	outputFile << id << "\t" << docno << "\t" << termFrequencies.size() << "\t" << denominator << endl;
 	outputFile.close();
-	// 통계내기위한 코드
-	//writeHighRankedTfIdfWords(documentList);
-	//writeStemStatistics();
 }
 
 void Document::calculateDenominator(float dValue) { // tf idf formula's denominator
@@ -178,46 +156,13 @@ void Document::writeTFFile() {
 	outputFile.close();
 }
 
-/*
-
-float Document::termFrequency(string term) {
-	//augmented frequency, to prevent a bias towards longer documents
-	return 0.5f + (0.5f * (float)termFrequencies[term] / (float)maxFrequency);
-}
-
-bool Document::contain(string term) {
-	return termFrequencies.find(term) != frequencies.end();
-}
-
-float Document::idf(string term, list<Document> documents) {
-	int termAppearedDocumentNumber = 0;
-	list<Document>::iterator iter = documents.begin();
-	while( iter != documents.end()) {
-		if(iter->contain(term))
-			termAppearedDocumentNumber++;
+string concatStringList(list<string> words) {
+	string result;
+	list<string>::iterator iter = words.begin();
+	result = *iter++;
+	while( iter != words.end()) {
+		result += " " + *iter;
 		iter++;
 	}
-
-	return log10(documents.size() / (termAppearedDocumentNumber + 1));
+	return result;
 }
-
-float Document::tfidf(string term, list<Document> documents) {
-	return termFrequency(term) * idf(term, documents);
-}
-
-void writeHighRankedTfIdfWords(list<Document> documentList) {
-	ofstream outputFile ("tfidf");
-	list<Document>::iterator iter = documentList.begin();
-	while( iter != documentList.end()) {
-		map<string, int>::iterator wordIter = iter->termFrequencies.begin();
-		while( wordIter != iter->termFrequencies.end()) {
-			float tfidf = iter->tfidf(wordIter->first, documentList);
-			if(tfidf < 0.2)
-				outputFile << wordIter->first << " : " <<  tfidf << endl;
-			wordIter++;
-		}
-		iter++;
-	}
-	outputFile.close();
-
-}*/

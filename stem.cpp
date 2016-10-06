@@ -23,8 +23,6 @@ void startTimer();
 void endTimerAndPrint(string with);
 void logList(list<string> strings);
 string durationToString(long duration);
-void makeWordStatistics(list<string> words);
-void makeStemStatistics(list<string> stems);
 //these above functions and variables are for development.
 
 string inputDirectory, outputDirectory, stopwordsFile;
@@ -237,9 +235,6 @@ void writeTermInfoFile() {
 		iter++;
 	}
 	outputFile.close();
-	// 통계내기위한 코드
-	//writeHighRankedTfIdfWords(documentList);
-	//writeStemStatistics();
 } 
 
 void writeDocInfoFile(string fileName, list<Document> documentList) {
@@ -250,9 +245,6 @@ void writeDocInfoFile(string fileName, list<Document> documentList) {
 		iter++;
 	}
 	outputFile.close();
-	// 통계내기위한 코드
-	//writeHighRankedTfIdfWords(documentList);
-	//writeStemStatistics();
 }
 
 void writeDocDataFile() {
@@ -370,10 +362,6 @@ void writeIndexFile() { // and term.dat
 	indexFile.close();
 	docFile.close();
 	termFile.close();
-	// 통계내기위한 코드
-	//writeHighRankedTfIdfWords(documentList);
-	//writeStemStatistics();
-	// get word.
 	string word;
 }
 

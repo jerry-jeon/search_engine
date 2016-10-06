@@ -10,6 +10,7 @@ using namespace std;
 void removePunctuation(string &str);
 void removeNumberWords(list<string> &words);
 bool isStopword(string word);
+string concatStringList(list<string> words);
 
 struct WordInfo {
 	static int lastId;
