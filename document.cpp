@@ -166,3 +166,8 @@ string concatStringList(list<string> words) {
 	}
 	return result;
 }
+
+bool Document::contain(string term) {
+	  return termFrequencies.find(term) != termFrequencies.end();
+}
+
