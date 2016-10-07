@@ -43,12 +43,13 @@ int main(int argc, char *argv[]) {
 		startTimer();
 		initializeStopwords();
 
-		transformFile("APW", 2000, 9, 30);
+		startTimer();
+		//transformFile("APW", 2000, 9, 30);
 		//transformFile("NYT", 2000, 8, 30);
-		//transformFilesInFolder("APW");
-		//transformFilesInFolder("NYT");
+		transformFilesInFolder("APW");
+		transformFilesInFolder("NYT");
+		endTimerAndPrint("Reading input file -------------------------------------");
 		
-		//writeTermInfoFile();
 		cout << "Start cacluate denimonator and write document file..." << endl;
 		startTimer();
 		writeDocDataFile();
@@ -114,7 +115,7 @@ void transformFile(string type, int year, int month, int day) {
 		startTimer();
 		parseToDocuments(fileString);
 
-		endTimerAndPrint("Refine complete - " + fileName);
+		endTimerAndPrint("Refine complete...");
 	}
 }
 
@@ -214,6 +215,7 @@ void writeIndexFile() { // and term.dat
 	ofstream termFile (outputDirectory + "/term.dat");
 	int wordId = 1;
 	int lineCount = 0;
+	int size = Document::collectionFrequencies.size();
 
 	map<string, int>::iterator wordIterator = Document::collectionFrequencies.begin();
 	while( wordIterator != Document::collectionFrequencies.end()) {
@@ -238,10 +240,17 @@ void writeIndexFile() { // and term.dat
 
 				indexFile << setfill('0') << setw(5) << wordId << setfill('0') << setw(6) << documentIterator->id << setfill('0') << setw(3) << termFrequency << setfill('0') << setw(count) << fixed << setprecision(7 - count) << weight << endl;
 				lineCount++;
+				documentIterator->termFrequencies.erase(word);
 			}
 			documentIterator++;
 		}
-		termFile << wordId++ << '\t' << word << '\t' << Document::documentFrequencies[word] << '\t' << wordIterator->second << '\t' << lineCount * 22 << endl;
+		termFile << wordId << '\t' << word << '\t' << Document::documentFrequencies[word] << '\t' << wordIterator->second << '\t' << lineCount * 22 << endl;
+
+		if(wordId % 5000 == 0) {
+			cout << wordId << " / " << size << "   " << ((float)wordId / (float)size * 100) << "% 진행중" << endl;
+		}
+
+		wordId++;
 		wordIterator++;
 	}
 	indexFile.close();
