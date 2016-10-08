@@ -15,6 +15,11 @@ then
 	if g++ -std=c++11 -O3 *.cpp && ./a.out resources/input/ output/ resources/stopwords.txt; then
 		echo "Start execution"
 	fi
+elif [ "$OPTION" == "-d" ]
+then
+	if g++ -std=c++11 -g *.cpp && gdb a.out; then
+		echo "Start execution"
+	fi
 else
 	if g++ -std=c++11 *.cpp && ./a.out resources/input/ output/ resources/stopwords.txt; then
 		echo "Start execution"

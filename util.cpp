@@ -49,10 +49,10 @@ namespace util {
 		}
 	}
 
-	float endTimerAndGetMinute() {
+	int endTimerAndGetMinute() {
 		auto duration = duration_cast<milliseconds>( high_resolution_clock::now() - startTimeStack.top() ).count();
 		startTimeStack.pop();
 
-		return (float)duration / (float)(1000 * 60);
+		return duration / (1000 * 60);
 	}
 }

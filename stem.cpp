@@ -30,10 +30,10 @@ int findDOCTagPosition(string fileString, int startPosition);
 void parseToDocuments(string fileString);
 Document parseToDocument(string file, int docTagStartPosition);
 string extractContentInTag(string fileString, string tag, int docTagStartPosition);
-list<Document> documentList;
-void writeTermInfoFile(); 
+vector<Document> documentList;
 void writeIndexFile();
 void writeDocDataFile();
+void writeTFFile();
 
 
 int main(int argc, char *argv[]) {
@@ -44,23 +44,26 @@ int main(int argc, char *argv[]) {
 		initializeStopwords();
 
 		startTimer();
-		transformFile("APW", 2000, 9, 30);
-		transformFile("NYT", 2000, 8, 30);
-		transformFile("NYT", 2000, 8, 29);
-		transformFile("NYT", 2000, 8, 28);
-		transformFile("NYT", 2000, 8, 27);
-		//transformFilesInFolder("APW");
-		//transformFilesInFolder("NYT");
+		//transformFile("APW", 2000, 9, 30);
+		//transformFile("NYT", 2000, 8, 30);
+		//transformFile("NYT", 2000, 8, 29);
+		//transformFile("NYT", 2000, 8, 28);
+		//transformFile("NYT", 2000, 8, 27);
+		transformFilesInFolder("APW");
+		transformFilesInFolder("NYT");
 		endTimerAndPrint("Reading input file -------------------------------------");
 		
 		cout << "Start cacluate denimonator and write document file..." << endl;
 		startTimer();
 		writeDocDataFile();
 		endTimerAndPrint("Writing document file -------------------------------------");
+		
 		startTimer();
 		cout << "Start write index and term file..." << endl;
 		writeIndexFile();
 		endTimerAndPrint("Writing index file -------------------------------------");
+	
+		//writeTFFile();
 
 		endTimerAndPrint("All time -------------------------------------");
 		return 0;
@@ -182,84 +185,94 @@ string extractContentInTag(string fileString, string tag, int docTagStartPositio
 	return result;
 }
 
-void writeTermInfoFile() {
-	ofstream outputFile (outputDirectory + "term.dat");
-	map<string, int>::iterator iter = Document::collectionFrequencies.begin();
-	int count = 0;
-	while( iter != Document::collectionFrequencies.end()) {
-		outputFile << ++count << "\t" << iter->first << "\t" << Document::documentFrequencies[iter->first] << "\t" << iter->second << endl;
-		iter++;
+
+void writeTFFile() {
+	ofstream preDocFile (outputDirectory + "/pre_doc.dat");
+	ofstream preTermFile (outputDirectory + "/pre_term.dat");
+	ofstream preTFFile (outputDirectory + "/pre_tf.dat");
+	int df_total = 0;
+	for(int i = 0; i < Document::wordList.size(); i++) {
+		term temp = *Document::wordList[i];
+		preTermFile << i << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << df_total * 23 << endl;
+		df_total += temp.df;
 	}
-	outputFile.close();
-} 
+
+	for(int i = 0; i < Document::wordList.size(); i++) {
+		term temp = *Document::wordList[i];
+		map<int, int>::iterator iter = temp.tf.begin();
+		while(iter != temp.tf.end()) {
+			
+			preTFFile << i << '\t' << temp.str << '\t' << iter->first << '\t' << iter->second << endl;;
+			iter++;
+		}
+	}
+
+	preDocFile.close();
+	preTermFile.close();
+	preTFFile.close();
+}
+
 
 void writeDocDataFile() {
 	ofstream documentFile (outputDirectory + "/doc.dat");
-	list<Document>::iterator documentIterator = documentList.begin();
+	vector<Document>::iterator documentIterator = documentList.begin();
 	while( documentIterator != documentList.end()) {
 		float denominator = 0.0f;
-		map<string, int>::iterator tfIterator = documentIterator->termFrequencies.begin();
-		while( tfIterator != documentIterator->termFrequencies.end()) {
-			int documentFrequency = Document::documentFrequencies[tfIterator->first];
-			float dValue =	log(Document::getDocumentNumber() / documentFrequency);
+		set<term*>::iterator wordIterator = documentIterator->words.begin();
+		while(wordIterator != documentIterator->words.end()) {
+			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
 
-			denominator += pow((log(tfIterator->second) + 1.0f) * dValue, 2.0f);
-			tfIterator++;
+			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
+
+			wordIterator++;
 		}
-		documentFile << documentIterator->toString() << endl;
 		documentIterator->denominator = sqrt(denominator);
+		documentFile << documentIterator->toString() << endl;
 		documentIterator++;
 	}
 	documentFile.close();
 }
 
+
 void writeIndexFile() { // and term.dat
 	ofstream indexFile (outputDirectory + "/index.dat");
-	ofstream termFile (outputDirectory + "/term.dat");
-	int wordId = 1;
 	int lineCount = 0;
-	int size = Document::collectionFrequencies.size();
+	int size = Document::wordList.size();
 
-	map<string, int>::iterator wordIterator = Document::collectionFrequencies.begin();
-	while( wordIterator != Document::collectionFrequencies.end()) {
-		if(wordId % 2000 == 0) {
+	for(int i = 0; i < Document::wordList.size(); i++) {
+		if(i % 2000 == 0)
 			startTimer();
-		}
-
-		string word = wordIterator->first;
+		term temp = *Document::wordList[i];
 		
-		int documentFrequency = Document::documentFrequencies[word]; // should change
+		int documentFrequency = temp.df;
 		float dValue =	log(Document::getDocumentNumber() / documentFrequency);
+		map<int, int>::iterator tfIterator = temp.tf.begin();
 
-		list<Document>::iterator documentIterator = documentList.begin();
-		while( documentIterator != documentList.end()) {
-			if(documentIterator->contain(word)) {
-				int termFrequency = documentIterator->termFrequencies[word];
-				float numerator = (log((float)termFrequency) + 1.0f) * dValue;	//get doc.data and denominator
-				float weight = numerator / documentIterator->denominator; // is denominator
-				// get figure of weight
-				int temp = (int)weight;
-				int count = 0;
-				do {
-					temp = int(temp / 10);
-					count++;
-				} while(temp > 0);
+		while(tfIterator != temp.tf.end()) {
+	
+			int termFrequency = tfIterator->second;
+			float numerator = (log((float)termFrequency) + 1.0f) * dValue;	//get doc.data and denominator
+			float weight = numerator / documentList[tfIterator->first - 1].denominator; // is denominator
+			// get figure of weight
+			int temp_i = (int)weight;
+			int count = 0;
+			do {
+				temp_i = int(temp_i / 10);
+				count++;
+			} while(temp_i > 0);
 
-				indexFile << setfill('0') << setw(5) << wordId << setfill('0') << setw(6) << documentIterator->id << setfill('0') << setw(3) << termFrequency << setfill('0') << setw(count) << fixed << setprecision(7 - count) << weight << endl;
-				lineCount++;
-				documentIterator->termFrequencies.erase(word);
+			indexFile << setfill('0') << setw(6) << temp.id << setfill('0') << setw(6) << to_string(documentList[tfIterator->first - 1].id) << setfill('0') << setw(3) << termFrequency << setfill('0') << setw(count) << fixed << setprecision(7 - count) << weight << endl;
+			tfIterator++;
+		}
+
+		if(i % 2000 == 0) {
+			cout << temp.id << " / " << size << "   " << i / size * 100 << "% 진행중" << endl;
+			cout << "??" << endl;
+			if(endTimerAndGetMinute() > 0) {
+				cout << "Word / Minute speed : " << (int)(i / endTimerAndGetMinute()) << endl;
 			}
-			documentIterator++;
+			cout << "???" << endl;
 		}
-		termFile << wordId << '\t' << word << '\t' << Document::documentFrequencies[word] << '\t' << wordIterator->second << '\t' << lineCount * 22 << endl;
-
-		if(wordId % 2000 == 0) {
-			cout << wordId << " / " << size << "   " << ((float)wordId / (float)size * 100) << "% 진행중" << endl;
-			cout << ((float)wordId / endTimerAndGetMinute()) << " word / minute ..." << endl;
-		}
-
-		wordId++;
-		wordIterator++;
 	}
 	indexFile.close();
 }

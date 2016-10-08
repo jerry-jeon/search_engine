@@ -4,8 +4,18 @@
 #include <string>
 #include <list>
 #include <map>
+#include <set>
+#include <vector>
 
 using namespace std;
+
+struct term {
+	int id;
+	int cf = 0;
+	int df = 0;
+	map<int, int> tf;
+	string str;
+};
 
 void removePunctuation(string &str);
 void removeNumberWords(list<string> &words);
@@ -17,21 +27,20 @@ public:
 	Document(string _docno, string headline, string text); 
 
 	static string outputDirectory;
-	static map<string, int> documentFrequencies;
-	static map<string, int> collectionFrequencies;
+	static map<string, int> wordIds;
+	static vector<term*> wordList;
 	int id;
+	static int wordId;
 	static list<string> stopwords;
 	string docno;
 	list<string> headlineWords;
 	list<string> textWords;
-	map<string, int> termFrequencies;
 	list<string> headlineStems;
 	list<string> textStems;
 	float denominator = 0;
 
 	static int getDocumentNumber();
 	list<string> tokenize(string str);
-	bool contain(string term);
 	void transform();
 	void increaseDocumentFrequency();
 	void stem(list<string> &stemList, list<string> words);
@@ -39,6 +48,8 @@ public:
 
 	void writeDocInfoFile();
 	string toString();
+
+	set<term*> words;
 private:
 	static int documentNumber;
 };
