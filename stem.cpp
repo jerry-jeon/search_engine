@@ -44,10 +44,13 @@ int main(int argc, char *argv[]) {
 		initializeStopwords();
 
 		startTimer();
-		//transformFile("APW", 2000, 9, 30);
-		//transformFile("NYT", 2000, 8, 30);
-		transformFilesInFolder("APW");
-		transformFilesInFolder("NYT");
+		transformFile("APW", 2000, 9, 30);
+		transformFile("NYT", 2000, 8, 30);
+		transformFile("NYT", 2000, 8, 29);
+		transformFile("NYT", 2000, 8, 28);
+		transformFile("NYT", 2000, 8, 27);
+		//transformFilesInFolder("APW");
+		//transformFilesInFolder("NYT");
 		endTimerAndPrint("Reading input file -------------------------------------");
 		
 		cout << "Start cacluate denimonator and write document file..." << endl;
@@ -219,6 +222,10 @@ void writeIndexFile() { // and term.dat
 
 	map<string, int>::iterator wordIterator = Document::collectionFrequencies.begin();
 	while( wordIterator != Document::collectionFrequencies.end()) {
+		if(wordId % 2000 == 0) {
+			startTimer();
+		}
+
 		string word = wordIterator->first;
 		
 		int documentFrequency = Document::documentFrequencies[word]; // should change
@@ -246,8 +253,9 @@ void writeIndexFile() { // and term.dat
 		}
 		termFile << wordId << '\t' << word << '\t' << Document::documentFrequencies[word] << '\t' << wordIterator->second << '\t' << lineCount * 22 << endl;
 
-		if(wordId % 5000 == 0) {
+		if(wordId % 2000 == 0) {
 			cout << wordId << " / " << size << "   " << ((float)wordId / (float)size * 100) << "% 진행중" << endl;
+			cout << ((float)wordId / endTimerAndGetMinute()) << " word / minute ..." << endl;
 		}
 
 		wordId++;

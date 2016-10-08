@@ -11,6 +11,7 @@ namespace util {
 	void endTimerAndPrint(string with);
 	void logList(list<string> strings);
 	string durationToString(long duration);
+	float endTimerAndGetMinute();
 }
 
 #endif
