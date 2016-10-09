@@ -33,6 +33,12 @@ Document::Document(string _docno, string headline, string text) {
 	textWords = tokenize(text);
 }
 
+Document::Document(int _id, string _docno, float _denominator) {
+	id = _id;
+	docno = _docno;
+	denominator = _denominator;
+}
+
 int Document::getDocumentNumber() {
 	return documentNumber;
 }
@@ -139,8 +145,12 @@ void Document::writeDocInfoFile() {
 	outputFile.close();
 }
 
-string Document::toString() {
+string Document::preFileString() {
 	return to_string(id) + "\t" + docno + "\t" + to_string(words.size()) + "\t" + to_string(denominator);
+}
+
+string Document::toString() {
+	return to_string(id) + "\t" + docno + "\t" + to_string(words.size());
 }
 
 void Document::calculateDenominator(float dValue) { // tf idf formula's denominator

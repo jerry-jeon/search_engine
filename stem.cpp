@@ -34,6 +34,11 @@ vector<Document> documentList;
 void writeIndexFile();
 void writeDocDataFile();
 void writeTFFile();
+void readFiles();
+string mode;
+const string STEP_1 = "s1";
+const string STEP_2 = "s2";
+
 
 
 int main(int argc, char *argv[]) {
@@ -52,18 +57,26 @@ int main(int argc, char *argv[]) {
 		transformFilesInFolder("APW");
 		transformFilesInFolder("NYT");
 		endTimerAndPrint("Reading input file -------------------------------------");
+
+		if(mode == "-s1") {
+			writeTFFile();
+		} else if(mode == "-s2") {
+			readFiles();
+			//writeIndex();
+		} else {
+
+			cout << "Start cacluate denimonator and write document file..." << endl;
+			startTimer();
+			writeDocDataFile();
+			endTimerAndPrint("Writing document file -------------------------------------");
+			
+			startTimer();
+			cout << "Start write index and term file..." << endl;
+			writeIndexFile();
+			endTimerAndPrint("Writing index file -------------------------------------");
+		}
 		
-		cout << "Start cacluate denimonator and write document file..." << endl;
-		startTimer();
-		writeDocDataFile();
-		endTimerAndPrint("Writing document file -------------------------------------");
-		
-		startTimer();
-		cout << "Start write index and term file..." << endl;
-		writeIndexFile();
-		endTimerAndPrint("Writing index file -------------------------------------");
 	
-		//writeTFFile();
 
 		endTimerAndPrint("All time -------------------------------------");
 		return 0;
@@ -75,14 +88,19 @@ int main(int argc, char *argv[]) {
 int handleArguments(int argc, char* argv[]) {
 	if(argc < 4) {
 		cout << "다음의 형태로 사용해주세요" << endl;
-		cout << argv[0] << " input폴더 output폴더 stopword파일" << endl;
+		cout << argv[0] << " input폴더 output폴더 stopword파일 option(omittable)" << endl;
 		cout << "ex) " << argv[0] << " input/ output/ stopwords.txt" << endl;
+		cout << "option -s1 : create data files without indexing" << endl;
+		cout << "option -s2 : create index file with already existing files" << endl;
 		return -1;
 	} else {
 		inputDirectory = argv[1];
 		outputDirectory = argv[2];
 		Document::outputDirectory = argv[2];
 		stopwordsFile = argv[3];
+		if(argc > 4)
+			mode = argv[4];
+		cout << mode << endl;
 		return 0;
 	}
 	return 1;
@@ -207,6 +225,22 @@ void writeTFFile() {
 		}
 	}
 
+	vector<Document>::iterator documentIterator = documentList.begin();
+	while( documentIterator != documentList.end()) {
+		float denominator = 0.0f;
+		set<term*>::iterator wordIterator = documentIterator->words.begin();
+		while(wordIterator != documentIterator->words.end()) {
+			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
+
+			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
+
+			wordIterator++;
+		}
+		documentIterator->denominator = sqrt(denominator);
+		preDocFile << documentIterator->preFileString() << endl;
+		documentIterator++;
+	}
+
 	preDocFile.close();
 	preTermFile.close();
 	preTFFile.close();
@@ -266,13 +300,89 @@ void writeIndexFile() { // and term.dat
 		}
 
 		if(i % 2000 == 0) {
-			cout << temp.id << " / " << size << "   " << i / size * 100 << "% 진행중" << endl;
-			cout << "??" << endl;
+			cout << temp.id << " / " << size << "   " << (i / size) * 100 << "% 진행중" << endl;
 			if(endTimerAndGetMinute() > 0) {
 				cout << "Word / Minute speed : " << (int)(i / endTimerAndGetMinute()) << endl;
 			}
-			cout << "???" << endl;
 		}
 	}
 	indexFile.close();
+}
+
+void readFiles() {
+	/*
+	string line;
+	ifstream preTFFile (outputDirectory + "/pre_tf.dat");
+	ifstream preTermFile (outputDirectory + "/pre_term.dat");
+	if(preTermFile.is_open() && preTFFile.is_open()) {
+		while( getline(preTermFile, line)) {
+			list<string> result;
+			char * c_str = strdup(line.c_str());
+			char* tokenizer = "\t";
+
+			for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
+				string temp = string(ptr);
+				result.push_back(temp);
+			}
+
+			free(c_str);
+
+			term *temp = new term;
+			temp->id = stoi(result[0]);
+			temp->str = result[1];
+			temp->df = result[2];
+			temp->cf = result[3];
+			while( getline(preTFFile, line)) {
+				result.clear();
+				c_str = strdup(line.c_sotr());
+
+				for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
+					string temp = string(ptr);
+					result.push_back(temp);
+				}
+
+				free(c_str);
+				
+			}
+			Document::wordList.push_back(temp);
+
+		}
+		preTermFile.close();
+	}
+
+	for(int i = 0; i < Document::wordList.size(); i++) {
+		term temp = *Document::wordList[i];
+		map<int, int>::iterator iter = temp.tf.begin();
+		while(iter != temp.tf.end()) {
+			
+			preTFFile << i << '\t' << temp.str << '\t' << iter->first << '\t' << iter->second << endl;;
+			iter++;
+		}
+	}
+
+	ifstream preDocFile (outputDirectory + "/pre_doc.dat");
+
+	if(preDocFile.is_open()) {
+		while( getline(preDocFile, line)) {
+			list<string> result;
+			char * c_str = strdup(str.c_str());
+			char* tokenizer = " -\n\t,.:_()'`\"/{}[]";
+
+			for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
+				string temp = string(ptr);
+				result.push_back(temp);
+			}
+
+			free(c_str);
+			
+			Document document = Document(stoi(result[0]), result[1], result[3]);
+			documentList.push_back(document);
+		}
+		preDocFile.close();
+	}
+
+
+	preTermFile.close();
+	preTFFile.close();
+	*/
 }

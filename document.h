@@ -25,6 +25,7 @@ string concatStringList(list<string> words);
 class Document {
 public:
 	Document(string _docno, string headline, string text); 
+	Document(int _id, string _docno, float _denominator); 
 
 	static string outputDirectory;
 	static map<string, int> wordIds;
@@ -48,6 +49,7 @@ public:
 
 	void writeDocInfoFile();
 	string toString();
+	string preFileString();
 
 	set<term*> words;
 private:
