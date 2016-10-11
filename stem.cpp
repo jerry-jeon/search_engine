@@ -269,9 +269,11 @@ void writeDocDataFile() {
 
 
 void writeIndexFile() { // and term.dat
+	ofstream termFile (outputDirectory + "/term.dat");
 	ofstream indexFile (outputDirectory + "/index.dat");
 	int lineCount = 0;
 	int size = Document::wordList.size();
+	int pre_df = 0;
 
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		if(i % 2000 == 0)
@@ -299,14 +301,17 @@ void writeIndexFile() { // and term.dat
 			tfIterator++;
 		}
 
+		termFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << pre_df * 23 << endl;;
+		pre_df = temp.df;
 		if(i % 2000 == 0) {
-			cout << temp.id << " / " << size << "   " << (i / size) * 100 << "% 진행중" << endl;
+			cout << temp.id << " / " << size << "   " << (float)((float)i / (float)size) * 100 << "% 진행중" << endl;
 			if(endTimerAndGetMinute() > 0) {
 				cout << "Word / Minute speed : " << (int)(i / endTimerAndGetMinute()) << endl;
 			}
 		}
 	}
 	indexFile.close();
+	termFile.close();
 }
 
 void readFiles() {
