@@ -157,7 +157,7 @@ string makeFileName(string type, int year, int month, int day) {
 
 
 string getFileIntoString(string directory, string fileName) {
-	string line, result = "";
+	string line = "", result = "";
 	ifstream file (directory + fileName);
 	if(file.is_open()) {
 		result.assign( (istreambuf_iterator<char>(file) ), (istreambuf_iterator<char>()));
@@ -304,7 +304,7 @@ void writeIndexFile() { // and term.dat
 		termFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << pre_df * 23 << endl;;
 		pre_df = temp.df;
 		if(i % 2000 == 0) {
-			cout << temp.id << " / " << size << "   " << (float)((float)i / (float)size) * 100 << "% 진행중" << endl;
+			cout << temp.id << " / " << size << "   " << (float)((float)i / (float)size) * 100 << "% proceeding" << endl;
 			if(endTimerAndGetMinute() > 0) {
 				cout << "Word / Minute speed : " << (int)(i / endTimerAndGetMinute()) << endl;
 			}
