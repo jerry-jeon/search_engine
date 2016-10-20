@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
 // return -1 if argument is not valid
 int handleArguments(int argc, char* argv[]) {
 	if(argc < 4) {
-		cout << "다음의 형태로 사용해주세요" << endl;
-		cout << argv[0] << " input폴더 output폴더 stopword파일 option(omittable)" << endl;
+		cout << "Use following format" << endl;
+		cout << argv[0] << " input_folder output_folder stopword_file option(omittable)" << endl;
 		cout << "ex) " << argv[0] << " input/ output/ stopwords.txt" << endl;
 		cout << "option -s1 : create data files without indexing" << endl;
 		cout << "option -s2 : create index file with already existing files" << endl;

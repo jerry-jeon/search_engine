@@ -33,10 +33,10 @@ namespace util {
 		int hour = (duration / (1000 * 60 * 60)) % 24;
 
 		if(hour > 0)
-			result += to_string(hour) + "시간 ";
+			result += to_string(hour) + "h ";
 		if(minute > 0)
-			result += to_string(minute) + "분 ";
-		result += to_string(second) + "." + to_string(deciSecond) + "초 걸렸습니다.";
+			result += to_string(minute) + "m ";
+		result += to_string(second) + "." + to_string(deciSecond) + "s was taken.";
 
 		return result;
 	}
