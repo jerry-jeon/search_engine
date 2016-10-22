@@ -22,7 +22,6 @@ int handleArguments(int argc, char* argv[]);
 void initializeStopwords();
 
 string makeFileName(string type, int year, int month, int day);
-string getFileIntoString(string directory, string fileName);
 void transformFilesInFolder(string type);
 void transformFile(string type, int year, int month, int day);
 int findDOCTagPosition(string fileString, int startPosition);
@@ -153,18 +152,6 @@ string makeFileName(string type, int year, int month, int day) {
 		//TODO throw error
 	}
 	return string(buffer);
-}
-
-
-string getFileIntoString(string directory, string fileName) {
-	string line = "", result = "";
-	ifstream file (directory + fileName);
-	if(file.is_open()) {
-		result.assign( (istreambuf_iterator<char>(file) ), (istreambuf_iterator<char>()));
-		file.close();
-		cout << "Read complete - " << fileName << endl;
-	}
-	return result;
 }
 
 void parseToDocuments(string fileString) {

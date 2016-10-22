@@ -12,6 +12,8 @@ namespace util {
 	void logList(list<string> strings);
 	string durationToString(long duration);
 	int endTimerAndGetMinute();
+	string getFileIntoString(string directory, string fileName);
+	string getFileIntoString(string fileName);
 }
 
 #endif

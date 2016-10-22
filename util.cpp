@@ -5,6 +5,7 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
+#include <fstream>
 #include <stack>
 
 using namespace std;
@@ -54,5 +55,27 @@ namespace util {
 		startTimeStack.pop();
 
 		return duration / (1000 * 60);
+	}
+
+	string getFileIntoString(string directory, string fileName) {
+		string line = "", result = "";
+		ifstream file (directory + fileName);
+		if(file.is_open()) {
+			result.assign( (istreambuf_iterator<char>(file) ), (istreambuf_iterator<char>()));
+			file.close();
+			cout << "Read complete - " << fileName << endl;
+		}
+		return result;
+	}
+
+	string getFileIntoString(string fileName) {
+		string line = "", result = "";
+		ifstream file (fileName);
+		if(file.is_open()) {
+			result.assign( (istreambuf_iterator<char>(file) ), (istreambuf_iterator<char>()));
+			file.close();
+			cout << "Read complete - " << fileName << endl;
+		}
+		return result;
 	}
 }
