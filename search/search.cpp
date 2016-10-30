@@ -4,7 +4,9 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <regex>
+#include <algorithm>
 
 using namespace std;
 using namespace util;
@@ -14,18 +16,47 @@ list<string> stopwords;
 Directories::Directories(string inputDirectory, string outputDirectory) {
 	indexFile = inputDirectory + "/index.dat";
 	docFile = inputDirectory + "/doc.dat";
-	wordFile = inputDirectory + "/word.dat";
+	termFile = inputDirectory + "/term.dat";
 	queryFile = inputDirectory + "/topics25.txt";
 	resultVSMFile = outputDirectory + "/result_vsm.txt";
 	resultBMFile = outputDirectory + "/result_bm.txt";
 	stopwordsFile = inputDirectory + "/stopwords.txt";
 }
 
+Term::Term(string* tokens) {
+	id = stoi(tokens[0]);
+	word = tokens[1];
+	df = stoi(tokens[2]);
+	cf = stoi(tokens[3]);
+	indexStart = stoi(tokens[4]);
+}
+
+bool Query::contains(string word) {
+	return find(titleStems.begin(), titleStems.end(), word) != titleStems.end()
+		|| find(descriptionStems.begin(), descriptionStems.end(), word) != descriptionStems.end()
+		|| find(narrativeStems.begin(), narrativeStems.end(), word) != narrativeStems.end();
+}
+
+Index::Index(string indexFileLine) {
+	cout << indexFileLine << endl;
+	cout << indexFileLine.substr(0, 6) << endl;	
+	cout << indexFileLine.substr(6, 6) << endl;	
+	cout << indexFileLine.substr(12, 3) << endl;	
+	cout << indexFileLine.substr(15, 7) << endl;	
+	termId = stoi(indexFileLine.substr(0, 6));
+	docId = stoi(indexFileLine.substr(6, 12));
+	tf = stoi(indexFileLine.substr(12, 15));
+	weight = stof(indexFileLine.substr(15, 23));
+}
+
 int main(int argc, char *argv[]) {
 	if(validateArguments(argc, argv)) {
 		Directories *directories = new Directories(string(argv[1]), string(argv[2]));
 		stopwords = stopwordFileToList(directories->stopwordsFile);
-		queryFileToQueries(directories->queryFile);
+		list<Query> queryList = queryFileToQueries(directories->queryFile);
+		list<Term*> termList = termFileToMemory(directories->termFile);
+		findRelavantDocuments(directories->indexFile, *(queryList.begin()), termList);
+
 	} else {
 		cout << "Use following format" << endl;
 		cout << argv[0] << " input_folder output_folder" << endl;
@@ -55,21 +86,37 @@ list<string> stopwordFileToList(string stopwordsFile) {
 	return stopwords;
 }
 
-void queryFileToQueries(string queryFile) {
-	parseToQueries(getFileIntoString(queryFile));
+list<Term*> termFileToMemory(string termFile) {
+	list<Term*> terms;
+	string line;
+	ifstream file (termFile);
+	if(file.is_open()) {
+		while(getline(file, line)) {
+			istringstream iss(line);
+			string tokens [5];
+			string token;
+			for(int i = 0; getline(iss, token, '\t'); i++) {
+				tokens[i] = token;
+			}
+			terms.push_back(new Term(tokens));
+		}
+		file.close();
+	}
+	return terms;
 }
 
-void parseToQueries(string fileString) {
+list<Query> queryFileToQueries(string queryFile) {
+	return parseToQueries(getFileIntoString(queryFile));
+}
+
+list<Query> parseToQueries(string fileString) {
+	list<Query> queryList;
 	int topTagStartPosition = findTopTagPosition(fileString, 0);
 	while(topTagStartPosition != -1) {
-		Query query = parseToQuery(fileString, topTagStartPosition);
-		
-		logList(query.titleStems);
-		logList(query.descriptionStems);
-		logList(query.narrativeStems);
-
+		queryList.push_back(parseToQuery(fileString, topTagStartPosition));
 		topTagStartPosition = findTopTagPosition(fileString, topTagStartPosition);
 	}
+	return queryList;
 }
 
 // return -1 if doc doens't exist
@@ -173,3 +220,32 @@ void removeNumberWords( list<string> &words ) {
 	}
 }
 
+list<int> findRelavantDocuments(string indexFileName, Query query, list<Term*> termList) {
+	list<Term*>::iterator iterator = termList.begin();
+	list<Index*> indexes;
+
+	cout << indexFileName << endl;
+	ifstream indexFile (indexFileName);
+	if(indexFile.is_open()) {
+		while( iterator != termList.end()) {
+			if(query.contains((*iterator)->word)) {
+				cout << (*iterator)->word << endl;
+				cout << (*iterator)->indexStart << endl;
+				int termId = (*iterator)->id;
+				string line;
+				indexFile.clear();
+				indexFile.seekg((*iterator)->indexStart);
+				do {
+					getline(indexFile, line);
+					cout << "line : " << line << endl;
+					Index *index = new Index(line);
+					termId = index->termId;
+					indexes.push_back(index);
+					cout << index->weight << endl;
+				} while(termId == (*iterator)->id);
+			}
+			iterator++;
+		}
+		indexFile.close();
+	}
+}
