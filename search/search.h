@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <set>
+#include <map>
 
 using namespace std;
 
@@ -82,7 +83,7 @@ struct Result {
 int main(int argc, char *argv[]);
 bool validateArguments(int argc, char* argv[]);
 list<string> stopwordFileToList(string stopwordsFile);
-list<Term*> termFileToMemory(string termFile);
+map<string, Term*> termFileToMemory(string termFile);
 vector<Document*> documentFileToMemory(string documentFile);
 
 list<Query> queryFileToQueries(string queryFile);
@@ -97,7 +98,7 @@ bool isStopword(string word);
 void stem(list<string> &stemList, list<string> words);
 void removeNumberWords( list<string> &words );
 
-list<Document> findRelevantDocuments(string indexFileName, Query query, list<Term*> termList, vector<Document*> documents);
+list<Document> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
 
 list<Result> rankByVectorSpace(Query query, list<Document> relevantDocuments);	
 list<Result> rankByLanguageModel(Query query, list<Document> relevantDocuments);	
