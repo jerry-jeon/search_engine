@@ -1,10 +1,7 @@
 OPTION=$1
 STEP_OPTION=$2
 
-cp output/doc.dat backup/doc.dat > /dev/null 2>&1
-cp output/term.dat backup/doc.dat > /dev/null 2>&1
-cp output/tf.dat backup/tf.dat > /dev/null 2>&1
-cp output/index.dat backup/index.dat > /dev/null 2>&1
+rm ./a.out > /dev/null 2>&1
 
 if [ "$OPTION" == "-r" ]
 then
@@ -14,12 +11,12 @@ then
 		if ./a.out resources/input/ output/ resources/stopwords.txt -s1; then
 			echo "Start execution"
 		fi
-	elif [ "$STEP_OPTION" == "-s1" ]
+	elif [ "$STEP_OPTION" == "-s2" ]
 	then
 		if ./a.out resources/input/ output/ resources/stopwords.txt -s2; then
 			echo "Start execution"
 		fi
-	else [ "$STEP_OPTION" == "-s1" ]
+	else
 		if ./a.out resources/input/ output/ resources/stopwords.txt; then
 			echo "Start execution"
 		fi
@@ -34,10 +31,3 @@ else
 		echo "Start execution"
 	fi
 fi
-
-rm ./a.out > /dev/null 2>&1
-
-open output/doc.dat > /dev/null 2>&1
-open output/term.dat > /dev/null 2>&1
-open output/tf.dat > /dev/null 2>&1
-open output/index.dat > /dev/null 2>&1

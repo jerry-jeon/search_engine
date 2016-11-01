@@ -198,9 +198,12 @@ void writeTFFile() {
 	int df_total = 0;
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		term temp = *Document::wordList[i];
-		preTermFile << i << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << df_total * 23 << endl;
+		preTermFile << i << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << df_total * 24 << endl;
 		df_total += temp.df;
 	}
+
+	preTermFile.close();
+	cout << "complete preTermFile" << endl;
 
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		term temp = *Document::wordList[i];
@@ -211,6 +214,8 @@ void writeTFFile() {
 			iter++;
 		}
 	}
+	preTFFile.close();
+	cout << "complete preTFFile" << endl;
 
 	vector<Document>::iterator documentIterator = documentList.begin();
 	while( documentIterator != documentList.end()) {
@@ -228,9 +233,9 @@ void writeTFFile() {
 		documentIterator++;
 	}
 
+	cout << "complete preDocFile" << endl;
+
 	preDocFile.close();
-	preTermFile.close();
-	preTFFile.close();
 }
 
 
@@ -288,8 +293,8 @@ void writeIndexFile() { // and term.dat
 			tfIterator++;
 		}
 
-		termFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << pre_df * 23 << endl;;
-		pre_df = temp.df;
+		termFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << pre_df * 24 << endl;;
+		pre_df += temp.df;
 		if(i % 2000 == 0) {
 			cout << temp.id << " / " << size << "   " << (float)((float)i / (float)size) * 100 << "% proceeding" << endl;
 			if(endTimerAndGetMinute() > 0) {
@@ -302,13 +307,34 @@ void writeIndexFile() { // and term.dat
 }
 
 void readFiles() {
-	/*
 	string line;
 	ifstream preTFFile (outputDirectory + "/pre_tf.dat");
 	ifstream preTermFile (outputDirectory + "/pre_term.dat");
+	ifstream preDocFile (outputDirectory + "/pre_doc.dat");
+
+	if(preDocFile.is_open()) {
+		while( getline(preDocFile, line)) {
+			vector<string> result;
+			char * c_str = strdup(line.c_str());
+			char* tokenizer = " -\n\t,.:_()'`\"/{}[]";
+
+			for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
+				string temp = string(ptr);
+				result.push_back(temp);
+			}
+
+			free(c_str);
+			
+			Document document = Document(stoi(result[0]), result[1], stof(result[3]));
+			documentList.push_back(document);
+		}
+		cout << "doc complete " << endl;
+		preDocFile.close();
+	}
+
 	if(preTermFile.is_open() && preTFFile.is_open()) {
 		while( getline(preTermFile, line)) {
-			list<string> result;
+			vector<string> result;
 			char * c_str = strdup(line.c_str());
 			char* tokenizer = "\t";
 
@@ -322,59 +348,76 @@ void readFiles() {
 			term *temp = new term;
 			temp->id = stoi(result[0]);
 			temp->str = result[1];
-			temp->df = result[2];
-			temp->cf = result[3];
-			while( getline(preTFFile, line)) {
+			temp->df = stoi(result[2]);
+			temp->cf = stoi(result[3]);
+			for(int i = 0; i < temp->df; i++) {
+				getline(preTFFile, line);
 				result.clear();
-				c_str = strdup(line.c_sotr());
+				c_str = strdup(line.c_str());
 
 				for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
 					string temp = string(ptr);
+					cout << temp << endl;
 					result.push_back(temp);
 				}
+				// tf term이 다 같아야함
+				temp->tf[stoi(result[2])] = stoi(result[3]);
+				documentList[stoi(result[2]) - 1].words.insert(temp);
 
 				free(c_str);
 				
 			}
 			Document::wordList.push_back(temp);
-
+			//cout << Document::wordList[Document::wordList.size() - 1]->str << endl;
 		}
 		preTermFile.close();
 	}
 
-	for(int i = 0; i < Document::wordList.size(); i++) {
-		term temp = *Document::wordList[i];
-		map<int, int>::iterator iter = temp.tf.begin();
-		while(iter != temp.tf.end()) {
-			
-			preTFFile << i << '\t' << temp.str << '\t' << iter->first << '\t' << iter->second << endl;;
+	cout << Document::wordList.size() << endl;
+	cout << Document::wordList[Document::wordList.size() - 2]->str << endl;
+	cout << Document::wordList[300]->str << endl;
+	for(int i = 1; i < Document::wordList.size(); i++) {
+		//cout << i << endl;
+		term *yaho = Document::wordList[i];
+		//cout << yaho->str << endl;
+		map<int, int>::iterator iter = yaho->tf.begin();
+		while(iter != yaho->tf.end()) {
+			cout << yaho->str << " doc(" << iter->first << ") : " << iter->second <<  endl;
 			iter++;
 		}
 	}
 
-	ifstream preDocFile (outputDirectory + "/pre_doc.dat");
+	/*
+	for(int i = 0; i < documentList.size(); i++) {
+		int total;
+		Document document = documentList[i];
+		set<term*>::iterator wordIterator = documentIterator->words.begin();
+		while(wordIterator != documentIterator->words.end()) {
+			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
 
-	if(preDocFile.is_open()) {
-		while( getline(preDocFile, line)) {
-			list<string> result;
-			char * c_str = strdup(str.c_str());
-			char* tokenizer = " -\n\t,.:_()'`\"/{}[]";
+			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
 
-			for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
-				string temp = string(ptr);
-				result.push_back(temp);
-			}
-
-			free(c_str);
-			
-			Document document = Document(stoi(result[0]), result[1], result[3]);
-			documentList.push_back(document);
+			wordIterator++;
 		}
-		preDocFile.close();
 	}
+	vector<Document>::iterator documentIterator = documentList.begin();
+	while( documentIterator != documentList.end()) {
+		float denominator = 0.0f;
+		set<term*>::iterator wordIterator = documentIterator->words.begin();
+		while(wordIterator != documentIterator->words.end()) {
+			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
 
+			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
+
+			wordIterator++;
+		}
+		documentIterator->denominator = sqrt(denominator);
+		documentFile << documentIterator->toString() << endl;
+		documentIterator++;
+	}
 
 	preTermFile.close();
 	preTFFile.close();
 	*/
+	
 }
