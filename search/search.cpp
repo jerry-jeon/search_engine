@@ -7,11 +7,14 @@
 #include <sstream>
 #include <regex>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 using namespace util;
 
 list<string> stopwords;
+int total_cf = 0;
+int total_words = 0;
 
 Directories::Directories(string inputDirectory, string outputDirectory) {
 	indexFile = inputDirectory + "/index.dat";
@@ -31,22 +34,32 @@ Term::Term(string* tokens) {
 	indexStart = stoi(tokens[4]);
 }
 
+Document::Document(string* tokens) {
+	id = stoi(tokens[0]);
+	docNo = tokens[1];
+	size = stoi(tokens[2]);
+	//sqrt_of_weight_square_sum = stoi(tokens[4]);
+}
+
 bool Query::contains(string word) {
 	return find(titleStems.begin(), titleStems.end(), word) != titleStems.end()
 		|| find(descriptionStems.begin(), descriptionStems.end(), word) != descriptionStems.end()
 		|| find(narrativeStems.begin(), narrativeStems.end(), word) != narrativeStems.end();
 }
 
+int Query::tf(string word) {
+	return count(allStems.begin(), allStems.end(), word);
+}
+
 Index::Index(string indexFileLine) {
-	cout << indexFileLine << endl;
-	cout << indexFileLine.substr(0, 6) << endl;	
-	cout << indexFileLine.substr(6, 6) << endl;	
-	cout << indexFileLine.substr(12, 3) << endl;	
-	cout << indexFileLine.substr(15, 7) << endl;	
 	termId = stoi(indexFileLine.substr(0, 6));
-	docId = stoi(indexFileLine.substr(6, 12));
-	tf = stoi(indexFileLine.substr(12, 15));
-	weight = stof(indexFileLine.substr(15, 23));
+	docId = stoi(indexFileLine.substr(6, 6));
+	tf = stoi(indexFileLine.substr(12, 3));
+	weight = stof(indexFileLine.substr(15, 7));
+}
+
+bool Result::operator<(const Result &other) const {
+	return score < other.score;
 }
 
 int main(int argc, char *argv[]) {
@@ -55,7 +68,16 @@ int main(int argc, char *argv[]) {
 		stopwords = stopwordFileToList(directories->stopwordsFile);
 		list<Query> queryList = queryFileToQueries(directories->queryFile);
 		list<Term*> termList = termFileToMemory(directories->termFile);
-		findRelavantDocuments(directories->indexFile, *(queryList.begin()), termList);
+		vector<Document*> documents = documentFileToMemory(directories->docFile);
+		
+		list<Document> relevantDocuments = findRelevantDocuments(directories->indexFile, *(queryList.begin()), termList, documents);
+		list<Result> resultList = rankByVectorSpace(*(queryList.begin()), relevantDocuments);
+		list<Result> resultList2 = rankByLanguageModel(*(queryList.begin()), relevantDocuments);
+
+		cout << "Vector space " << endl;
+		printResult(resultList);
+		cout << "Language model" << endl;
+		printResult(resultList2);
 
 	} else {
 		cout << "Use following format" << endl;
@@ -98,11 +120,32 @@ list<Term*> termFileToMemory(string termFile) {
 			for(int i = 0; getline(iss, token, '\t'); i++) {
 				tokens[i] = token;
 			}
+			total_cf += stoi(tokens[3]);
 			terms.push_back(new Term(tokens));
 		}
 		file.close();
 	}
 	return terms;
+}
+
+vector<Document*> documentFileToMemory(string documentFile) {
+	vector<Document*> documents;
+	string line;
+	ifstream file (documentFile);
+	if(file.is_open()) {
+		while(getline(file, line)) {
+			istringstream iss(line);
+			string tokens [4];
+			string token;
+			for(int i = 0; getline(iss, token, '\t'); i++) {
+				tokens[i] = token;
+			}
+			documents.push_back(new Document(tokens));
+			total_words++;
+		}
+		file.close();
+	}
+	return documents;
 }
 
 list<Query> queryFileToQueries(string queryFile) {
@@ -140,6 +183,10 @@ Query parseToQuery(string file, int topTagStartPosition) {
 
 	string narr = stringUntilNextTag(file, "narr", topTagStartPosition);
 	query.narrativeStems = stringToRefinedStems(narr);
+
+	query.allStems.insert(query.allStems.end(), query.titleStems.begin(), query.titleStems.end());
+	query.allStems.insert(query.allStems.end(), query.descriptionStems.begin(), query.descriptionStems.end());
+	query.allStems.insert(query.allStems.end(), query.narrativeStems.begin(), query.narrativeStems.end());
 	
 	return query;
 }
@@ -220,32 +267,107 @@ void removeNumberWords( list<string> &words ) {
 	}
 }
 
-list<int> findRelavantDocuments(string indexFileName, Query query, list<Term*> termList) {
+list<Document> findRelevantDocuments(string indexFileName, Query query, list<Term*> termList, vector<Document*> documents) {
 	list<Term*>::iterator iterator = termList.begin();
-	list<Index*> indexes;
+	list<Document> relevantDocuments;
 
-	cout << indexFileName << endl;
 	ifstream indexFile (indexFileName);
 	if(indexFile.is_open()) {
 		while( iterator != termList.end()) {
 			if(query.contains((*iterator)->word)) {
-				cout << (*iterator)->word << endl;
-				cout << (*iterator)->indexStart << endl;
 				int termId = (*iterator)->id;
 				string line;
 				indexFile.clear();
-				indexFile.seekg((*iterator)->indexStart);
-				do {
+				int yaho = (((*iterator)->indexStart) / 23) * 24;
+				indexFile.seekg(yaho);
+				int df = (*iterator)->df;
+				cout << termId << " , " << (*iterator)->word  << " : " << df << endl;
+				for(int i = 0; i < (*iterator)->df; i++) {
 					getline(indexFile, line);
-					cout << "line : " << line << endl;
 					Index *index = new Index(line);
 					termId = index->termId;
-					indexes.push_back(index);
-					cout << index->weight << endl;
-				} while(termId == (*iterator)->id);
+					index->str = (*iterator)->word;
+					index->cf = (*iterator)->cf;
+					list<Document>::iterator iter;
+					cout << index->termId << " : " << index->tf << endl;
+					cout << index->docId << " : " << index->weight << endl;
+					iter = find(relevantDocuments.begin(), relevantDocuments.end(), *documents[index->docId - 1]);
+					if(iter != relevantDocuments.end()) {
+						iter->indexes.push_back(index);
+						iter->words.insert(*iterator);
+					} else {
+						Document relevant = *documents[index->docId - 1];
+						relevant.indexes.push_back(index);
+						relevant.words.insert(*iterator);
+						relevantDocuments.push_back(relevant);
+					}
+
+					if((*iterator)->word != index->str) {
+						cout << "wrong" << endl;
+					}
+				}
 			}
 			iterator++;
 		}
 		indexFile.close();
+	}
+
+	return relevantDocuments;
+}
+
+list<Result> rankByVectorSpace(Query query, list<Document> relevantDocuments) {
+	list<Result> resultList;
+	list<Document>::iterator iter = relevantDocuments.begin();
+	while(iter != relevantDocuments.end()) {
+		Result result;
+		result.docNo = iter->docNo; 
+		float score = 0;
+		list<Index*>::iterator indexIter = (iter->indexes).begin();	
+		while(indexIter != (iter->indexes).end()) {
+			score += (*indexIter)->weight * query.tf((*indexIter)->str);
+			indexIter++;
+		}
+		result.score = score;
+		resultList.push_back(result);
+		iter++;
+	}
+	resultList.sort();
+	return resultList;
+}
+
+list<Result> rankByLanguageModel(Query query, list<Document> relevantDocuments) {
+	float mu = 1500.0f;
+	list<Result> resultList;
+	list<Document>::iterator iter = relevantDocuments.begin();
+	while(iter != relevantDocuments.end()) {
+		Result result;
+		result.docNo = iter->docNo; 
+		float score = 0;
+		list<Index*>::iterator indexIter = (iter->indexes).begin();	
+		while(indexIter != (iter->indexes).end()) {
+			int tf = query.tf((*indexIter)->str);
+			float cf = (*indexIter)->cf;
+			cout << "tf : " << tf << endl;
+			cout << mu << endl;
+			cout << cf << endl;
+			cout << total_cf << endl;
+			cout << "total_words : " << total_words << endl;
+			score += log(((float)tf + mu * cf / (float)total_cf) / (float)total_words + mu);
+			indexIter++;
+		}
+		result.score = score;
+		resultList.push_back(result);
+		iter++;
+	}
+	resultList.sort();
+	return resultList;
+}
+
+
+void printResult(list<Result> resultList) {
+	list<Result>::iterator iter = resultList.begin();
+	while(iter != resultList.end()) {
+		cout << iter->docNo << "\t" << iter->score << endl;
+		iter++;
 	}
 }
