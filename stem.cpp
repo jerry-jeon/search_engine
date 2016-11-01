@@ -265,7 +265,8 @@ void writeIndexFile() { // and term.dat
 	ofstream indexFile (outputDirectory + "/index.dat");
 	int lineCount = 0;
 	int size = Document::wordList.size();
-	int pre_df = 0;
+	unsigned long long pre_df = 0;
+	unsigned long long index_line = 24;
 
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		if(i % 2000 == 0)
@@ -293,7 +294,7 @@ void writeIndexFile() { // and term.dat
 			tfIterator++;
 		}
 
-		termFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << pre_df * 24 << endl;;
+		termFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << pre_df * index_line << endl;;
 		pre_df += temp.df;
 		if(i % 2000 == 0) {
 			cout << temp.id << " / " << size << "   " << (float)((float)i / (float)size) * 100 << "% proceeding" << endl;
