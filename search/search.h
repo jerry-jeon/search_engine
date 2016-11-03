@@ -25,12 +25,10 @@ struct Directories {
 struct Query {
 	int num;
 	string title;
-	list<string> titleStems;
-	list<string> descriptionStems;
-	list<string> narrativeStems;
-	list<string> allStems;
-	bool contains(string word);
-	int tf(string word);
+	map<string, int> titleStems;
+	map<string, int> descriptionStems;
+	map<string, int> narrativeStems;
+	map<string, int> allStems;
 };
 
 struct Term {
@@ -44,19 +42,13 @@ struct Term {
 	bool operator==(const Term &other) const {
 		return id == other.id;
 	}
-	bool operator==(int _id) {
-		return id == _id;
-	}
 };
 
 struct Index {
 	Index(string indexFileLine);
-
-	int termId;
+	Term *term;
 	int docId;
 	int tf;
-	int cf;
-	string str;
 	float weight;
 };
 
@@ -70,6 +62,7 @@ struct Document {
 	list<Index*> indexes;
 
 	set<Term*> words; // this is for language model
+	map<Term*, Index> tfs;
 
 	bool operator==(const Document &other) {
 		return id == other.id;
@@ -93,16 +86,16 @@ list<Query> parseToQueries(string fileString);
 int findTopTagPosition(string fileString, int startPosition);
 Query parseToQuery(string file, int topTagStartPosition);
 string stringUntilNextTag(string fileString, string tag, int topTagStartPosition);
-list<string> stringToRefinedStems(string str);
+map<string, int> stringToRefinedStems(string str);
 void removePunctuation( string &str );
 list<string> tokenize(string str);
 bool isStopword(string word);
-void stem(list<string> &stemList, list<string> words);
+map<string, int> stem(list<string> words);
 void removeNumberWords( list<string> &words );
 
-map<int, list<Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
+map<Document*, list<Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
 
-list<Result> rankByVectorSpace(Query query, map<int, list<Index*>> docMap, vector<Document*> documents);	
+list<Result> rankByVectorSpace(Query query, map<Document*, list<Index*>> relevantDocuments);	
 list<Result> rankByLanguageModel(Query query, map<int, list<Index*>> docMap, vector<Document*> documents);	
 
 void printResult(list<Result> resultList);
