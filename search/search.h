@@ -62,7 +62,6 @@ struct Document {
 	list<Index*> indexes;
 
 	set<Term*> words; // this is for language model
-	map<Term*, Index> tfs;
 
 	bool operator==(const Document &other) {
 		return id == other.id;
@@ -93,10 +92,11 @@ bool isStopword(string word);
 map<string, int> stem(list<string> words);
 void removeNumberWords( list<string> &words );
 
-map<Document*, list<Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
+//TODO 꼭 이방법밖에 없을까...
+map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
 
-list<Result> rankByVectorSpace(Query query, map<Document*, list<Index*>> relevantDocuments);	
-list<Result> rankByLanguageModel(Query query, map<int, list<Index*>> docMap, vector<Document*> documents);	
+list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> relevantDocuments);	
+list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>> relevantDocuments, map<string, Term*> terms);	
 
 void printResult(list<Result> resultList);
 void resultToFile(Query query, list<Result> resultList, string resultFile); 
