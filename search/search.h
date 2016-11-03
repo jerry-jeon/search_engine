@@ -17,12 +17,14 @@ struct Directories {
 	string termFile;
 	string queryFile;
 	string resultVSMFile;
-	string resultBMFile;
+	string resultLMFile;
+	string resultFile;
 	string stopwordsFile;
 };
 
 struct Query {
 	int num;
+	string title;
 	list<string> titleStems;
 	list<string> descriptionStems;
 	list<string> narrativeStems;
@@ -38,7 +40,7 @@ struct Term {
 	string word;
 	int df;
 	int cf;
-	int indexStart;
+	unsigned long long indexStart;
 	bool operator==(const Term &other) const {
 		return id == other.id;
 	}
@@ -98,11 +100,12 @@ bool isStopword(string word);
 void stem(list<string> &stemList, list<string> words);
 void removeNumberWords( list<string> &words );
 
-list<Document> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
+map<int, list<Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
 
-list<Result> rankByVectorSpace(Query query, list<Document> relevantDocuments);	
-list<Result> rankByLanguageModel(Query query, list<Document> relevantDocuments);	
+list<Result> rankByVectorSpace(Query query, map<int, list<Index*>> docMap, vector<Document*> documents);	
+list<Result> rankByLanguageModel(Query query, map<int, list<Index*>> docMap, vector<Document*> documents);	
 
 void printResult(list<Result> resultList);
+void resultToFile(Query query, list<Result> resultList, string resultFile); 
 
 #endif
