@@ -31,6 +31,7 @@ public:
 	static map<string, int> wordIds;
 	static vector<term*> wordList;
 	int id;
+	float weightSum;
 	static int wordId;
 	static list<string> stopwords;
 	string docno;
