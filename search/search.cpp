@@ -39,38 +39,60 @@ Document::Document(string* tokens) {
 	id = stoi(tokens[0]);
 	docNo = tokens[1];
 	size = stoi(tokens[2]);
-	//sqrt_of_weight_square_sum = stoi(tokens[4]);
+	weightSum = stof(tokens[3]);
 }
 
 Index::Index(string indexFileLine) {
+	termId = stoi(indexFileLine.substr(0, 6));
 	docId = stoi(indexFileLine.substr(6, 6));
-	tf = stoi(indexFileLine.substr(12, 4));
-	weight = stof(indexFileLine.substr(16, 7));
+	tf = stoi(indexFileLine.substr(12, 5));
+	weight = stof(indexFileLine.substr(17, 7));
 }
 
 bool Result::operator<(const Result &other) const {
 	return score > other.score;
 }
 
+void checkIndex(string index) {
+	ifstream indexFile (index);
+	string line;
+	long linecnt = 0;
+	while(getline(indexFile, line)) {
+
+		if(line.length() != 25) {
+			cout << "START" << endl;
+			cout << linecnt << endl;
+			cout << line.length() << endl;
+			cout << line << endl;
+			cout << "END" << endl;
+		}
+		linecnt++;
+	}
+	cout << "GOOD" << endl;
+}
+
 int main(int argc, char *argv[]) {
+	Directories *directories = new Directories(string(argv[1]), string(argv[2]));
 	if(validateArguments(argc, argv)) {
-		Directories *directories = new Directories(string(argv[1]), string(argv[2]));
 		stopwords = stopwordFileToList(directories->stopwordsFile);
 		list<Query> queryList = queryFileToQueries(directories->queryFile);
 		map<string, Term*> terms = termFileToMemory(directories->termFile);
 		vector<Document*> documents = documentFileToMemory(directories->docFile);
-
+		
 		list<Query>::iterator queryIter = queryList.begin();
+		queryIter++;
+		queryIter++;
+		queryIter++;
+		
 		while(queryIter != queryList.end()) {
 			map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(directories->indexFile, *queryIter, terms, documents);
-			//list<Result> resultList = rankByVectorSpace(*queryIter, relevantDocuments);
+			list<Result> resultList = rankByVectorSpace(*queryIter, relevantDocuments);
 			cout << "find ENd " << endl;
-			list<Result> resultList = rankByLanguageModel(*queryIter, relevantDocuments, terms);
+			//list<Result> resultList = rankByLanguageModel(*queryIter, relevantDocuments, terms);
 
 			//printResult(resultList);
 			resultToFile(*queryIter, resultList, directories->resultFile);
 			cout << "query end :  " << (*queryIter).title << endl;
-			break;
 			queryIter++;
 
 		}
@@ -292,18 +314,7 @@ map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, 
 				getline(indexFile, line);
 				Index *index = new Index(line);
 				index->term = term;
-
-				//TODO
-				if(index->weight == 0) // there is bug in index so It's temporary fix
-					continue;
-
-
-				/*
-				cout << "term id : " << term->id << endl;;
-			  cout << "tf : " << index->tf << endl;
-			  cout << "docId : " << index->docId << endl;
-			  cout << "weight : " << index->weight << endl;
-				*/
+				//
 				//TODO id들 0부터 시작하게
 				Document *document = documents[index->docId - 1];
 				relevantDocuments[document][term->word] = index;
@@ -324,8 +335,7 @@ list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> 
 	list<Result> resultList;
 	map<Document*, map<string, Index*>>::iterator iter = relevantDocuments.begin();
 	while(iter != relevantDocuments.end()) {
-		bool check = false;
-		float numerator = 0, q_denominator = 0,  d_denominator = 0;
+		float numerator = 0, d_denominator = 0;
 		
 		Document *document = iter->first;
 		map<string, Index*> indexList = iter->second;
@@ -336,20 +346,10 @@ list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> 
 		while(indexIter != indexList.end()) {
 			Index *index = indexIter->second;
 			numerator += index->weight * query.allStems[index->term->word];
-			q_denominator += pow(query.allStems[index->term->word], 2);
-			d_denominator += pow(index->weight, 2);
 			indexIter++;
 		}
-		result.score = numerator / sqrt(q_denominator * d_denominator);
-		if(check) {
-			cout << numerator << endl;
-			cout << q_denominator << endl;
-			cout << d_denominator << endl;
-			cout << q_denominator * d_denominator << endl;
-			cout << sqrt(q_denominator * d_denominator) << endl;
-			cout << result.score << endl;
-			getchar();
-		}
+		d_denominator = document->weightSum;
+		result.score = numerator / sqrt(d_denominator);
 		resultList.push_back(result);
 		iter++;
 	}
