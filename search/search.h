@@ -47,6 +47,7 @@ struct Term {
 struct Index {
 	Index(string indexFileLine);
 	Term *term;
+	int termId;
 	int docId;
 	int tf;
 	float weight;
@@ -58,7 +59,7 @@ struct Document {
 	int id;
 	string docNo;
 	int size;
-	float sqrt_of_weight_square_sum;
+	float weightSum;
 	list<Index*> indexes;
 
 	set<Term*> words; // this is for language model

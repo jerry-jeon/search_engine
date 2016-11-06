@@ -193,49 +193,54 @@ string extractContentInTag(string fileString, string tag, int docTagStartPositio
 
 void writeTFFile() {
 	ofstream preDocFile (outputDirectory + "/pre_doc.dat");
-	ofstream preTermFile (outputDirectory + "/pre_term.dat");
-	ofstream preTFFile (outputDirectory + "/pre_tf.dat");
-	int df_total = 0;
-	for(int i = 0; i < Document::wordList.size(); i++) {
-		term temp = *Document::wordList[i];
-		preTermFile << i << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << df_total * 24 << endl;
-		df_total += temp.df;
-	}
-
-	preTermFile.close();
-	cout << "complete preTermFile" << endl;
-
-	for(int i = 0; i < Document::wordList.size(); i++) {
-		term temp = *Document::wordList[i];
-		map<int, int>::iterator iter = temp.tf.begin();
-		while(iter != temp.tf.end()) {
-			
-			preTFFile << i << '\t' << temp.str << '\t' << iter->first << '\t' << iter->second << endl;;
-			iter++;
-		}
-	}
-	preTFFile.close();
-	cout << "complete preTFFile" << endl;
-
 	vector<Document>::iterator documentIterator = documentList.begin();
 	while( documentIterator != documentList.end()) {
 		float denominator = 0.0f;
 		set<term*>::iterator wordIterator = documentIterator->words.begin();
 		while(wordIterator != documentIterator->words.end()) {
-			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
+			float dValue =	log((float)Document::getDocumentNumber() / (float)(*wordIterator)->df);
 
 			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
 
 			wordIterator++;
 		}
 		documentIterator->denominator = sqrt(denominator);
-		preDocFile << documentIterator->preFileString() << endl;
-		documentIterator++;
+		preDocFile << documentIterator->toString() << endl;
+		cout << documentIterator->id << " / " << documentList.size() << endl;
+		documentList.erase(documentIterator);
 	}
 
 	cout << "complete preDocFile" << endl;
 
+	ofstream preTFFile (outputDirectory + "/pre_tf.dat");
+	int size = Document::wordList.size();
+	for(int i = 0; i < Document::wordList.size(); i++) {
+		term temp = *Document::wordList[i];
+		map<int, int>::iterator iter = temp.tf.begin();
+		while(iter != temp.tf.end()) {
+			preTFFile << i << '\t' << temp.str << '\t' << iter->first << '\t' << iter->second << endl;;
+			iter++;
+		}
+		cout << i << " / " << size << endl;
+	}
+	preTFFile.close();
+	cout << "complete preTFFile" << endl;
+
 	preDocFile.close();
+	cout << "hmm..." << endl;
+	int j = 0;
+	ofstream preTermFile (outputDirectory + "/pre_term.dat");
+	vector<term*>::iterator termIter = Document::wordList.begin();
+	while(termIter != Document::wordList.end()) {
+		term *temp = *termIter;
+		preTermFile << temp->id << '\t' << temp->str << '\t' << temp->df << '\t' << temp->cf << endl;
+		cout << temp->id << " / " << size << endl;
+		termIter++;
+	}
+
+	preTermFile.close();
+	cout << "complete preTermFile" << endl;
+
 }
 
 
@@ -246,7 +251,7 @@ void writeDocDataFile() {
 		float denominator = 0.0f;
 		set<term*>::iterator wordIterator = documentIterator->words.begin();
 		while(wordIterator != documentIterator->words.end()) {
-			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
+			float dValue =	log((float)Document::getDocumentNumber() / (float)(*wordIterator)->df);
 
 			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
 
@@ -261,12 +266,13 @@ void writeDocDataFile() {
 
 
 void writeIndexFile() { // and term.dat
+	ofstream tfFile (outputDirectory + "/tf.dat");
 	ofstream termFile (outputDirectory + "/term.dat");
 	ofstream indexFile (outputDirectory + "/index.dat");
 	int lineCount = 0;
 	int size = Document::wordList.size();
 	unsigned long long pre_df = 0;
-	unsigned long long index_line = 24;
+	unsigned long long index_line = 26;
 
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		if(i % 2000 == 0)
@@ -274,7 +280,9 @@ void writeIndexFile() { // and term.dat
 		term temp = *Document::wordList[i];
 		
 		int documentFrequency = temp.df;
-		float dValue =	log(Document::getDocumentNumber() / documentFrequency);
+		float dValue =	log((float)Document::getDocumentNumber() / (float)documentFrequency);
+		if(dValue == 0)
+			continue;
 		map<int, int>::iterator tfIterator = temp.tf.begin();
 
 		while(tfIterator != temp.tf.end()) {
@@ -282,7 +290,10 @@ void writeIndexFile() { // and term.dat
 			int termFrequency = tfIterator->second;
 			float numerator = (log((float)termFrequency) + 1.0f) * dValue;	//get doc.data and denominator
 			float weight = numerator / documentList[tfIterator->first - 1].denominator; // is denominator
-			// get figure of weight
+			if(documentList[tfIterator->first - 1].denominator == 0) {
+				cout << "YES!!!!!!!!!!" << endl;
+			}
+					// get figure of weight
 			int temp_i = (int)weight;
 			int count = 0;
 			do {
@@ -290,7 +301,9 @@ void writeIndexFile() { // and term.dat
 				count++;
 			} while(temp_i > 0);
 
-			indexFile << setfill('0') << setw(6) << temp.id << setfill('0') << setw(6) << to_string(documentList[tfIterator->first - 1].id) << setfill('0') << setw(3) << termFrequency << setfill('0') << setw(count) << fixed << setprecision(7 - count) << weight << endl;
+			tfFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << endl;
+			indexFile << setfill('0') << setw(6) << temp.id << setfill('0') << setw(6) << to_string(documentList[tfIterator->first - 1].id) << setfill('0') << setw(5) << termFrequency << setfill('0') << setw(count) << fixed << setprecision(7 - count) << weight << endl;
+			documentList[tfIterator->first - 1].weightSum += pow(weight, 2);
 			tfIterator++;
 		}
 
@@ -305,13 +318,22 @@ void writeIndexFile() { // and term.dat
 	}
 	indexFile.close();
 	termFile.close();
+	tfFile.close();
+
+	ofstream documentFile (outputDirectory + "/doc.dat");
+	vector<Document>::iterator documentIterator = documentList.begin();
+	while( documentIterator != documentList.end()) {
+		documentFile << documentIterator->toString() << "\t" << sqrt(documentIterator->weightSum) << endl;
+		documentIterator++;
+	}
+	documentFile.close();
 }
 
 void readFiles() {
 	string line;
-	ifstream preTFFile (outputDirectory + "/pre_tf.dat");
-	ifstream preTermFile (outputDirectory + "/pre_term.dat");
-	ifstream preDocFile (outputDirectory + "/pre_doc.dat");
+	ifstream preTFFile (outputDirectory + "/tf.dat");
+	ifstream preTermFile (outputDirectory + "/term.dat");
+	ifstream preDocFile (outputDirectory + "/doc.dat");
 
 	if(preDocFile.is_open()) {
 		while( getline(preDocFile, line)) {
@@ -333,6 +355,7 @@ void readFiles() {
 		preDocFile.close();
 	}
 
+	long tf_cnt = 0;
 	if(preTermFile.is_open() && preTFFile.is_open()) {
 		while( getline(preTermFile, line)) {
 			vector<string> result;
@@ -358,8 +381,8 @@ void readFiles() {
 
 				for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
 					string temp = string(ptr);
-					cout << temp << endl;
 					result.push_back(temp);
+					tf_cnt++;
 				}
 				// tf term이 다 같아야함
 				temp->tf[stoi(result[2])] = stoi(result[3]);
@@ -372,53 +395,61 @@ void readFiles() {
 			//cout << Document::wordList[Document::wordList.size() - 1]->str << endl;
 		}
 		preTermFile.close();
+		cout << "TF CNT : " << tf_cnt << endl;
 	}
 
-	cout << Document::wordList.size() << endl;
-	cout << Document::wordList[Document::wordList.size() - 2]->str << endl;
-	cout << Document::wordList[300]->str << endl;
 	for(int i = 1; i < Document::wordList.size(); i++) {
 		//cout << i << endl;
 		term *yaho = Document::wordList[i];
 		//cout << yaho->str << endl;
 		map<int, int>::iterator iter = yaho->tf.begin();
 		while(iter != yaho->tf.end()) {
-			cout << yaho->str << " doc(" << iter->first << ") : " << iter->second <<  endl;
 			iter++;
 		}
 	}
+	ofstream docFile (outputDirectory + "/docy.dat");
+	int size = Document::wordList.size();
+	map<int, float> weights;
+	for(int i = 0; i < Document::wordList.size(); i++) {
+		if(i % 2000 == 0)
+			startTimer();
+		term temp = *Document::wordList[i];
+		
+		int documentFrequency = temp.df;
+		float dValue =	log(Document::getDocumentNumber() / documentFrequency);
+		map<int, int>::iterator tfIterator = temp.tf.begin();
 
-	/*
-	for(int i = 0; i < documentList.size(); i++) {
-		int total;
-		Document document = documentList[i];
-		set<term*>::iterator wordIterator = documentIterator->words.begin();
-		while(wordIterator != documentIterator->words.end()) {
-			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
+		while(tfIterator != temp.tf.end()) {
+			int termFrequency = tfIterator->second;
+			float numerator = (log((float)termFrequency) + 1.0f) * dValue;	//get doc.data and denominator
+			float weight = numerator / documentList[tfIterator->first - 1].denominator; // is denominator
+			if(weight == 0) {
+				cout << "Zero : " << temp.id << endl;
+			}
+			weights[tfIterator->first] += pow(weight, 2);
+			// get figure of weight
+			int temp_i = (int)weight;
+			int count = 0;
+			do {
+				temp_i = int(temp_i / 10);
+				count++;
+			} while(temp_i > 0);
 
-			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
+			tfIterator++;
+		}
 
-			wordIterator++;
+		if(i % 2000 == 0) {
+			cout << temp.id << " / " << size << "   " << (float)((float)i / (float)size) * 100 << "% proceeding" << endl;
+			if(endTimerAndGetMinute() > 0) {
+				cout << "Word / Minute speed : " << (int)(i / endTimerAndGetMinute()) << endl;
+			}
 		}
 	}
-	vector<Document>::iterator documentIterator = documentList.begin();
-	while( documentIterator != documentList.end()) {
-		float denominator = 0.0f;
-		set<term*>::iterator wordIterator = documentIterator->words.begin();
-		while(wordIterator != documentIterator->words.end()) {
-			float dValue =	log(Document::getDocumentNumber() / (*wordIterator)->df);
-
-			denominator += pow((log((*wordIterator)->tf[documentIterator->id]) + 1.0f) * dValue, 2.0f);
-
-			wordIterator++;
-		}
-		documentIterator->denominator = sqrt(denominator);
-		documentFile << documentIterator->toString() << endl;
-		documentIterator++;
-	}
-
-	preTermFile.close();
-	preTFFile.close();
-	*/
 	
+	map<int, float>::iterator weightIter = weights.begin();
+	while(weightIter != weights.end()) {
+			docFile << documentList[weightIter->first].toString() << "\t" << sqrt(weightIter->second) << endl;
+			weightIter++;
+	}
+	docFile.close();
 }
