@@ -4,3 +4,5 @@
 *.out
 *.dat
 *.dSYM
+/search/output/*
+/search/script
