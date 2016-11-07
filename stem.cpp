@@ -20,18 +20,16 @@ using namespace std::chrono;
 bool validateArguments(int argc, char* argv[]);
 void initializeStopwords(string stopwordsFile);
 
-string makeFileName(string type, int year, int month, int day);
-void transformFilesInFolder(FilePaths *filePaths, string type);
-void transformFile(string filePath);
+void transformFilesInFolder(FilePaths *filePaths, string type, vector<Document> &documentVector);
+void transformFile(string filePath, vector<Document> &documentVector);
 int findDOCTagPosition(string fileString, int startPosition);
 
-void parseToDocuments(string fileString);
+void parseToDocuments(string fileString, vector<Document> &documentVector);
 Document parseToDocument(string file, int docTagStartPosition);
 string extractContentInTag(string fileString, string tag, int docTagStartPosition);
-vector<Document> documentList;
-void writeIndexFile(FilePaths *filePaths);
-void writeDocDataFile(FilePaths *filePaths);
-void writeTFFile(FilePaths *filePaths);
+void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector);
+void writeDocDataFile(FilePaths *filePaths, vector<Document> &documentVector);
+void writeTFFile(FilePaths *filePaths, vector<Document> documentVector);
 void readFiles(FilePaths *filePaths);
 string mode;
 const string STEP_1 = "s1";
@@ -49,13 +47,14 @@ int main(int argc, char *argv[]) {
 		initializeStopwords(filePaths->stopwordsFile);
 
 		startTimer();
-		transformFile(filePaths->articleFile("NYT", 2000, 8, 27));
-		//transformFilesInFolder(filePaths, "APW");
-		//transformFilesInFolder(filePaths, "NYT");
+		vector<Document> documentVector;
+		transformFile(filePaths->articleFile("NYT", 2000, 8, 27), documentVector);
+		//transformFilesInFolder(filePaths, "APW", documentVector);
+		//transformFilesInFolder(filePaths, "NYT", documentVector);
 		endTimerAndPrint("Reading input file -------------------------------------");
 
 		if(mode == "-s1") {
-			writeTFFile(filePaths);
+			writeTFFile(filePaths, documentVector);
 		} else if(mode == "-s2") {
 			readFiles(filePaths);
 			//writeIndex();
@@ -63,12 +62,12 @@ int main(int argc, char *argv[]) {
 
 			cout << "Start cacluate denimonator and write document file..." << endl;
 			startTimer();
-			writeDocDataFile(filePaths);
+			writeDocDataFile(filePaths, documentVector);
 			endTimerAndPrint("Writing document file -------------------------------------");
 			
 			startTimer();
 			cout << "Start write index and term file..." << endl;
-			writeIndexFile(filePaths);
+			writeIndexFile(filePaths, documentVector);
 			endTimerAndPrint("Writing index file -------------------------------------");
 		}
 		endTimerAndPrint("All time -------------------------------------");
@@ -107,46 +106,34 @@ void initializeStopwords(string stopwordsFile) {
 }
 
 
-void transformFilesInFolder(FilePaths *filePaths, string type) {
+void transformFilesInFolder(FilePaths *filePaths, string type, vector<Document> &documentVector) {
 	for(int year = 1998; year <= 2000; year++) {
 		for(int month = 1; month <= 12; month++) {
 			for(int day = 1; day <= 31; day++) {
-				transformFile(filePaths->articleFile(type, year, month, day));
+				transformFile(filePaths->articleFile(type, year, month, day), documentVector);
 			}
 		}
 	}
 }
 
-void transformFile(string filePath) {
+void transformFile(string filePath, vector<Document> &documentVector) {
 	string fileString = getFileIntoString(filePath);
 
 	if(fileString != "") {
 		startTimer();
-		parseToDocuments(fileString);
+		parseToDocuments(fileString, documentVector);
 
 		endTimerAndPrint("Refine complete...");
 	}
 }
 
-string makeFileName(string type, int year, int month, int day) {
-	char buffer[100];
-	if(type == "APW") {
-		std::snprintf(buffer, sizeof(buffer), "%d%02d%02d_APW_ENG", year, month, day);
-	} else if(type == "NYT") {
-		std::snprintf(buffer, sizeof(buffer), "%d%02d%02d_NYT", year, month, day);
-	} else {
-		//TODO throw error
-	}
-	return string(buffer);
-}
-
-void parseToDocuments(string fileString) {
+void parseToDocuments(string fileString, vector<Document> &documentVector) {
 	int docTagStartPosition = findDOCTagPosition(fileString, 0);
 	while(docTagStartPosition != string::npos) {
 		Document document = parseToDocument(fileString, docTagStartPosition);
 		document.transform();
 		document.increaseDocumentFrequency();
-		documentList.push_back(document);
+		documentVector.push_back(document);
 
 		docTagStartPosition = findDOCTagPosition(fileString, docTagStartPosition);
 	}
@@ -177,10 +164,10 @@ string extractContentInTag(string fileString, string tag, int docTagStartPositio
 }
 
 
-void writeTFFile(FilePaths *filePaths) {
+void writeTFFile(FilePaths *filePaths, vector<Document> documentVector) {
 	ofstream preDocFile (filePaths->preDocFile);
-	vector<Document>::iterator documentIterator = documentList.begin();
-	while( documentIterator != documentList.end()) {
+	vector<Document>::iterator documentIterator = documentVector.begin();
+	while( documentIterator != documentVector.end()) {
 		float denominator = 0.0f;
 		set<term*>::iterator wordIterator = documentIterator->words.begin();
 		while(wordIterator != documentIterator->words.end()) {
@@ -192,8 +179,8 @@ void writeTFFile(FilePaths *filePaths) {
 		}
 		documentIterator->denominator = sqrt(denominator);
 		preDocFile << documentIterator->toString() << endl;
-		cout << documentIterator->id << " / " << documentList.size() << endl;
-		documentList.erase(documentIterator);
+		cout << documentIterator->id << " / " << documentVector.size() << endl;
+		documentVector.erase(documentIterator);
 	}
 
 	cout << "complete preDocFile" << endl;
@@ -230,10 +217,10 @@ void writeTFFile(FilePaths *filePaths) {
 }
 
 
-void writeDocDataFile(FilePaths *filePaths) {
+void writeDocDataFile(FilePaths *filePaths, vector<Document> &documentVector) {
 	ofstream documentFile (filePaths->docFile);
-	vector<Document>::iterator documentIterator = documentList.begin();
-	while( documentIterator != documentList.end()) {
+	vector<Document>::iterator documentIterator = documentVector.begin();
+	while( documentIterator != documentVector.end()) {
 		float denominator = 0.0f;
 		set<term*>::iterator wordIterator = documentIterator->words.begin();
 		while(wordIterator != documentIterator->words.end()) {
@@ -251,7 +238,8 @@ void writeDocDataFile(FilePaths *filePaths) {
 }
 
 
-void writeIndexFile(FilePaths *filePaths) { // and term.dat
+void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector) { // and term.dat
+	cout << "HMM.. " << documentVector.size() << endl;
 	ofstream tfFile (filePaths->tfFile);
 	ofstream termFile (filePaths->termFile);
 	ofstream indexFile (filePaths->indexFile);
@@ -275,8 +263,8 @@ void writeIndexFile(FilePaths *filePaths) { // and term.dat
 	
 			int termFrequency = tfIterator->second;
 			float numerator = (log((float)termFrequency) + 1.0f) * dValue;	//get doc.data and denominator
-			float weight = numerator / documentList[tfIterator->first - 1].denominator; // is denominator
-			if(documentList[tfIterator->first - 1].denominator == 0) {
+			float weight = numerator / documentVector[tfIterator->first - 1].denominator; // is denominator
+			if(documentVector[tfIterator->first - 1].denominator == 0) {
 				cout << "YES!!!!!!!!!!" << endl;
 			}
 					// get figure of weight
@@ -288,8 +276,8 @@ void writeIndexFile(FilePaths *filePaths) { // and term.dat
 			} while(temp_i > 0);
 
 			tfFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << endl;
-			indexFile << setfill('0') << setw(6) << temp.id << setfill('0') << setw(6) << to_string(documentList[tfIterator->first - 1].id) << setfill('0') << setw(5) << termFrequency << setfill('0') << setw(count) << fixed << setprecision(7 - count) << weight << endl;
-			documentList[tfIterator->first - 1].weightSum += pow(weight, 2);
+			indexFile << setfill('0') << setw(6) << temp.id << setfill('0') << setw(6) << to_string(documentVector[tfIterator->first - 1].id) << setfill('0') << setw(5) << termFrequency << setfill('0') << setw(count) << fixed << setprecision(7 - count) << weight << endl;
+			documentVector[tfIterator->first - 1].weightSum += pow(weight, 2);
 			tfIterator++;
 		}
 
@@ -307,8 +295,8 @@ void writeIndexFile(FilePaths *filePaths) { // and term.dat
 	tfFile.close();
 
 	ofstream documentFile (filePaths->docFile);
-	vector<Document>::iterator documentIterator = documentList.begin();
-	while( documentIterator != documentList.end()) {
+	vector<Document>::iterator documentIterator = documentVector.begin();
+	while( documentIterator != documentVector.end()) {
 		documentFile << documentIterator->toString() << "\t" << sqrt(documentIterator->weightSum) << endl;
 		documentIterator++;
 	}
@@ -316,6 +304,7 @@ void writeIndexFile(FilePaths *filePaths) { // and term.dat
 }
 
 void readFiles(FilePaths *filePaths) {
+	vector<Document> documentVector;
 	string line;
 	ifstream preTFFile (filePaths->preTFFile);
 	ifstream preTermFile (filePaths->preTermFile);
@@ -335,7 +324,7 @@ void readFiles(FilePaths *filePaths) {
 			free(c_str);
 			
 			Document document = Document(stoi(result[0]), result[1], stof(result[3]));
-			documentList.push_back(document);
+			documentVector.push_back(document);
 		}
 		cout << "doc complete " << endl;
 		preDocFile.close();
@@ -372,7 +361,7 @@ void readFiles(FilePaths *filePaths) {
 				}
 				// tf term이 다 같아야함
 				temp->tf[stoi(result[2])] = stoi(result[3]);
-				documentList[stoi(result[2]) - 1].words.insert(temp);
+				documentVector[stoi(result[2]) - 1].words.insert(temp);
 
 				free(c_str);
 				
@@ -408,7 +397,7 @@ void readFiles(FilePaths *filePaths) {
 		while(tfIterator != temp.tf.end()) {
 			int termFrequency = tfIterator->second;
 			float numerator = (log((float)termFrequency) + 1.0f) * dValue;	//get doc.data and denominator
-			float weight = numerator / documentList[tfIterator->first - 1].denominator; // is denominator
+			float weight = numerator / documentVector[tfIterator->first - 1].denominator; // is denominator
 			if(weight == 0) {
 				cout << "Zero : " << temp.id << endl;
 			}
@@ -434,7 +423,7 @@ void readFiles(FilePaths *filePaths) {
 	
 	map<int, float>::iterator weightIter = weights.begin();
 	while(weightIter != weights.end()) {
-			docFile << documentList[weightIter->first].toString() << "\t" << sqrt(weightIter->second) << endl;
+			docFile << documentVector[weightIter->first].toString() << "\t" << sqrt(weightIter->second) << endl;
 			weightIter++;
 	}
 	docFile.close();
