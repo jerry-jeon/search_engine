@@ -8,16 +8,16 @@ then
 	g++ -std=c++11 -O3 *.cpp
 	if [ "$STEP_OPTION" == "-s1" ]
 	then
-		if ./a.out resources/input/ output/ resources/stopwords.txt -s1; then
+		if ./a.out input/ index/ result/ -s1; then
 			echo "Start execution"
 		fi
 	elif [ "$STEP_OPTION" == "-s2" ]
 	then
-		if ./a.out resources/input/ output/ resources/stopwords.txt -s2; then
+		if ./a.out input/ index/ result/ -s2; then
 			echo "Start execution"
 		fi
 	else
-		if ./a.out resources/input/ output/ resources/stopwords.txt; then
+		if ./a.out input/ index/ result/; then
 			echo "Start execution"
 		fi
 	fi
@@ -30,7 +30,7 @@ elif [ "$OPTION" == "-c" ]
 then
 	g++ -std=c++11 *.cpp;
 else
-	if g++ -std=c++11 *.cpp && ./a.out resources/input/ output/ resources/stopwords.txt; then
+	if g++ -std=c++11 *.cpp && ./a.out input/ index/ result/; then
 		echo "Start execution"
 	fi
 fi

@@ -17,23 +17,22 @@ using namespace util;
 using namespace std;
 using namespace std::chrono;
 
-string inputDirectory, outputDirectory, stopwordsFile;
-int handleArguments(int argc, char* argv[]);
-void initializeStopwords();
+bool validateArguments(int argc, char* argv[]);
+void initializeStopwords(string stopwordsFile);
 
 string makeFileName(string type, int year, int month, int day);
-void transformFilesInFolder(string type);
-void transformFile(string type, int year, int month, int day);
+void transformFilesInFolder(FilePaths *filePaths, string type);
+void transformFile(string filePath);
 int findDOCTagPosition(string fileString, int startPosition);
 
 void parseToDocuments(string fileString);
 Document parseToDocument(string file, int docTagStartPosition);
 string extractContentInTag(string fileString, string tag, int docTagStartPosition);
 vector<Document> documentList;
-void writeIndexFile();
-void writeDocDataFile();
-void writeTFFile();
-void readFiles();
+void writeIndexFile(FilePaths *filePaths);
+void writeDocDataFile(FilePaths *filePaths);
+void writeTFFile(FilePaths *filePaths);
+void readFiles(FilePaths *filePaths);
 string mode;
 const string STEP_1 = "s1";
 const string STEP_2 = "s2";
@@ -41,71 +40,59 @@ const string STEP_2 = "s2";
 
 
 int main(int argc, char *argv[]) {
-	if(handleArguments(argc, argv) == -1) {
-		return -1;
-	} else {
-		startTimer();
-		initializeStopwords();
+	if(validateArguments(argc, argv)) {
+		FilePaths *filePaths = new FilePaths(argv);
+		//TODO should be deleted
+		Document::outputDirectory = argv[1];
 
 		startTimer();
-		//transformFile("APW", 2000, 9, 30);
-		//transformFile("NYT", 2000, 8, 30);
-		//transformFile("NYT", 2000, 8, 29);
-		//transformFile("NYT", 2000, 8, 28);
-		transformFile("NYT", 2000, 8, 27);
-		//transformFilesInFolder("APW");
-		//transformFilesInFolder("NYT");
+		initializeStopwords(filePaths->stopwordsFile);
+
+		startTimer();
+		transformFile(filePaths->articleFile("NYT", 2000, 8, 27));
+		//transformFilesInFolder(filePaths, "APW");
+		//transformFilesInFolder(filePaths, "NYT");
 		endTimerAndPrint("Reading input file -------------------------------------");
 
 		if(mode == "-s1") {
-			writeTFFile();
+			writeTFFile(filePaths);
 		} else if(mode == "-s2") {
-			readFiles();
+			readFiles(filePaths);
 			//writeIndex();
 		} else {
 
 			cout << "Start cacluate denimonator and write document file..." << endl;
 			startTimer();
-			writeDocDataFile();
+			writeDocDataFile(filePaths);
 			endTimerAndPrint("Writing document file -------------------------------------");
 			
 			startTimer();
 			cout << "Start write index and term file..." << endl;
-			writeIndexFile();
+			writeIndexFile(filePaths);
 			endTimerAndPrint("Writing index file -------------------------------------");
 		}
-		
-	
-
 		endTimerAndPrint("All time -------------------------------------");
 		return 0;
+	} else {
+		return -1;
 	}
-
 }
 
 // return -1 if argument is not valid
-int handleArguments(int argc, char* argv[]) {
+bool validateArguments(int argc, char* argv[]) {
 	if(argc < 4) {
 		cout << "Use following format" << endl;
 		cout << argv[0] << " input_folder output_folder stopword_file option(omittable)" << endl;
 		cout << "ex) " << argv[0] << " input/ output/ stopwords.txt" << endl;
 		cout << "option -s1 : create data files without indexing" << endl;
 		cout << "option -s2 : create index file with already existing files" << endl;
-		return -1;
+		return false;
 	} else {
-		inputDirectory = argv[1];
-		outputDirectory = argv[2];
-		Document::outputDirectory = argv[2];
-		stopwordsFile = argv[3];
-		if(argc > 4)
-			mode = argv[4];
-		cout << mode << endl;
-		return 0;
+		return true;
 	}
-	return 1;
 }
 
-void initializeStopwords() {
+void initializeStopwords(string stopwordsFile) {
 	list<string> stopwords;
 	string line;
 	ifstream file (stopwordsFile);
@@ -120,19 +107,18 @@ void initializeStopwords() {
 }
 
 
-void transformFilesInFolder(string type) {
+void transformFilesInFolder(FilePaths *filePaths, string type) {
 	for(int year = 1998; year <= 2000; year++) {
 		for(int month = 1; month <= 12; month++) {
 			for(int day = 1; day <= 31; day++) {
-				transformFile(type, year, month, day);
+				transformFile(filePaths->articleFile(type, year, month, day));
 			}
 		}
 	}
 }
 
-void transformFile(string type, int year, int month, int day) {
-	string fileName = makeFileName(type, year, month, day);
-	string fileString = getFileIntoString(inputDirectory + type + "/" + to_string(year) + "/", fileName);
+void transformFile(string filePath) {
+	string fileString = getFileIntoString(filePath);
 
 	if(fileString != "") {
 		startTimer();
@@ -191,8 +177,8 @@ string extractContentInTag(string fileString, string tag, int docTagStartPositio
 }
 
 
-void writeTFFile() {
-	ofstream preDocFile (outputDirectory + "/pre_doc.dat");
+void writeTFFile(FilePaths *filePaths) {
+	ofstream preDocFile (filePaths->preDocFile);
 	vector<Document>::iterator documentIterator = documentList.begin();
 	while( documentIterator != documentList.end()) {
 		float denominator = 0.0f;
@@ -212,7 +198,7 @@ void writeTFFile() {
 
 	cout << "complete preDocFile" << endl;
 
-	ofstream preTFFile (outputDirectory + "/pre_tf.dat");
+	ofstream preTFFile (filePaths->preTFFile);
 	int size = Document::wordList.size();
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		term temp = *Document::wordList[i];
@@ -229,7 +215,7 @@ void writeTFFile() {
 	preDocFile.close();
 	cout << "hmm..." << endl;
 	int j = 0;
-	ofstream preTermFile (outputDirectory + "/pre_term.dat");
+	ofstream preTermFile (filePaths->preTermFile);
 	vector<term*>::iterator termIter = Document::wordList.begin();
 	while(termIter != Document::wordList.end()) {
 		term *temp = *termIter;
@@ -244,8 +230,8 @@ void writeTFFile() {
 }
 
 
-void writeDocDataFile() {
-	ofstream documentFile (outputDirectory + "/doc.dat");
+void writeDocDataFile(FilePaths *filePaths) {
+	ofstream documentFile (filePaths->docFile);
 	vector<Document>::iterator documentIterator = documentList.begin();
 	while( documentIterator != documentList.end()) {
 		float denominator = 0.0f;
@@ -265,10 +251,10 @@ void writeDocDataFile() {
 }
 
 
-void writeIndexFile() { // and term.dat
-	ofstream tfFile (outputDirectory + "/tf.dat");
-	ofstream termFile (outputDirectory + "/term.dat");
-	ofstream indexFile (outputDirectory + "/index.dat");
+void writeIndexFile(FilePaths *filePaths) { // and term.dat
+	ofstream tfFile (filePaths->tfFile);
+	ofstream termFile (filePaths->termFile);
+	ofstream indexFile (filePaths->indexFile);
 	int lineCount = 0;
 	int size = Document::wordList.size();
 	unsigned long long pre_df = 0;
@@ -320,7 +306,7 @@ void writeIndexFile() { // and term.dat
 	termFile.close();
 	tfFile.close();
 
-	ofstream documentFile (outputDirectory + "/doc.dat");
+	ofstream documentFile (filePaths->docFile);
 	vector<Document>::iterator documentIterator = documentList.begin();
 	while( documentIterator != documentList.end()) {
 		documentFile << documentIterator->toString() << "\t" << sqrt(documentIterator->weightSum) << endl;
@@ -329,11 +315,11 @@ void writeIndexFile() { // and term.dat
 	documentFile.close();
 }
 
-void readFiles() {
+void readFiles(FilePaths *filePaths) {
 	string line;
-	ifstream preTFFile (outputDirectory + "/tf.dat");
-	ifstream preTermFile (outputDirectory + "/term.dat");
-	ifstream preDocFile (outputDirectory + "/doc.dat");
+	ifstream preTFFile (filePaths->preTFFile);
+	ifstream preTermFile (filePaths->preTermFile);
+	ifstream preDocFile (filePaths->preDocFile);
 
 	if(preDocFile.is_open()) {
 		while( getline(preDocFile, line)) {
@@ -407,7 +393,7 @@ void readFiles() {
 			iter++;
 		}
 	}
-	ofstream docFile (outputDirectory + "/docy.dat");
+	ofstream docFile (filePaths->docyFile);
 	int size = Document::wordList.size();
 	map<int, float> weights;
 	for(int i = 0; i < Document::wordList.size(); i++) {

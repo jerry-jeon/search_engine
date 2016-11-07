@@ -14,6 +14,44 @@ using namespace std::chrono;
 stack<high_resolution_clock::time_point> startTimeStack;
 
 namespace util {
+	FilePaths::FilePaths(string inputDirectory, string indexDirectory, string resultDirectory) {
+		this->inputDirectory = inputDirectory;
+		stopwordsFile = inputDirectory + "/stopwords.txt";
+		queryFile = inputDirectory + "/topics25.txt";
+
+		docFile = indexDirectory + "/doc.dat";
+		termFile = indexDirectory + "/term.dat";
+		indexFile = indexDirectory + "/index.dat";
+
+		//TODO These files should be deleted
+		preDocFile = indexDirectory + "/pre_doc.dat";
+		preTFFile = indexDirectory + "/pre_tf.dat";
+		preTermFile = indexDirectory + "/pre_term.dat";
+		tfFile = indexDirectory + "/tf.dat";
+		docyFile = indexDirectory + "/docy.dat";
+
+		resultVSMFile = resultDirectory + "/result_vsm.txt";
+		resultLMFile = resultDirectory + "/result_lm.txt";
+		resultFile = resultDirectory + "/result.txt";
+	}
+
+	FilePaths::FilePaths(char* argv[]) : FilePaths(string(argv[1]), string(argv[2]), string(argv[3])) {}
+
+	string FilePaths::articleFile(string type, int year, int month, int day) {
+		// make file name
+		char buffer[100];
+		if(type == "APW") {
+			std::snprintf(buffer, sizeof(buffer), "%d%02d%02d_APW_ENG", year, month, day);
+		} else if(type == "NYT") {
+			std::snprintf(buffer, sizeof(buffer), "%d%02d%02d_NYT", year, month, day);
+		} else {
+			//TODO throw error
+		}
+		string fileName = string(buffer);
+
+		// total path
+		return inputDirectory + type + "/" + to_string(year) + "/" + fileName;
+	}
 
 	void startTimer() {
 		startTimeStack.push(high_resolution_clock::now());

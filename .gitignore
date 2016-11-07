@@ -6,3 +6,5 @@
 *.dSYM
 /search/output/*
 /search/script
+/input/APW
+/input/NYT
