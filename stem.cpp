@@ -52,9 +52,9 @@ int main(int argc, char *argv[]) {
 		//transformFile("NYT", 2000, 8, 30);
 		//transformFile("NYT", 2000, 8, 29);
 		//transformFile("NYT", 2000, 8, 28);
-		//transformFile("NYT", 2000, 8, 27);
-		transformFilesInFolder("APW");
-		transformFilesInFolder("NYT");
+		transformFile("NYT", 2000, 8, 27);
+		//transformFilesInFolder("APW");
+		//transformFilesInFolder("NYT");
 		endTimerAndPrint("Reading input file -------------------------------------");
 
 		if(mode == "-s1") {

@@ -22,7 +22,7 @@ Directories::Directories(string inputDirectory, string outputDirectory) {
 	termFile = inputDirectory + "/term.dat";
 	queryFile = inputDirectory + "/topics25.txt";
 	resultVSMFile = outputDirectory + "/result_vsm.txt";
-	resultLMFile = outputDirectory + "/result_bm.txt";
+	resultLMFile = outputDirectory + "/result_lm.txt";
 	resultFile = outputDirectory + "/result.txt";
 	stopwordsFile = inputDirectory + "/stopwords.txt";
 }
@@ -72,6 +72,7 @@ void checkIndex(string index) {
 }
 
 int main(int argc, char *argv[]) {
+	startTimer();
 	Directories *directories = new Directories(string(argv[1]), string(argv[2]));
 	if(validateArguments(argc, argv)) {
 		stopwords = stopwordFileToList(directories->stopwordsFile);
@@ -88,10 +89,11 @@ int main(int argc, char *argv[]) {
 			map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(directories->indexFile, *queryIter, terms, documents);
 			list<Result> resultList = rankByVectorSpace(*queryIter, relevantDocuments);
 			cout << "find ENd " << endl;
-			//list<Result> resultList = rankByLanguageModel(*queryIter, relevantDocuments, terms);
+			//list<Result> resultList2 = rankByLanguageModel(*queryIter, relevantDocuments, terms);
 
 			//printResult(resultList);
-			resultToFile(*queryIter, resultList, directories->resultFile);
+			resultToFile(*queryIter, resultList, directories->resultVSMFile);
+			//resultToFile(*queryIter, resultList2, directories->resultLMFile);
 			cout << "query end :  " << (*queryIter).title << endl;
 			queryIter++;
 
@@ -102,6 +104,7 @@ int main(int argc, char *argv[]) {
 		cout << argv[0] << " input_folder output_folder" << endl;
 		cout << "ex) " << argv[0] << " input output" << endl;
 	}
+	endTimerAndPrint("All time------------------------------");
 }
 
 bool validateArguments(int argc, char* argv[]) {
@@ -408,7 +411,7 @@ void printResult(list<Result> resultList) {
 }
 
 void resultToFile(Query query, list<Result> resultList, string resultFile) {
-	ofstream file (resultFile);
+	ofstream file (resultFile, ios::app);
 
 	file << "topicnum : " << query.num << endl;
 	file << "query : " << query.title << endl;
