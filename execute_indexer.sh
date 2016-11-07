@@ -26,6 +26,9 @@ then
 	if g++ -std=c++11 -g *.cpp && gdb a.out; then
 		echo "Start execution"
 	fi
+elif [ "$OPTION" == "-c" ]
+then
+	g++ -std=c++11 *.cpp;
 else
 	if g++ -std=c++11 *.cpp && ./a.out resources/input/ output/ resources/stopwords.txt; then
 		echo "Start execution"
