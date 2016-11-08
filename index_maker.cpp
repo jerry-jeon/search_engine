@@ -1,6 +1,7 @@
 #include "document.h"
 #include "util.h"
 #include "text_processor.h"
+#include "index_maker.h"
 
 #include <stack>
 #include <list>
@@ -15,78 +16,6 @@
 using namespace util;
 using namespace std;
 using namespace std::chrono;
-
-bool validateArguments(int argc, char* argv[]);
-
-void transformFilesInFolder(FilePaths *filePaths, string type, vector<Document> &documentVector);
-void transformFile(string filePath, vector<Document> &documentVector);
-int findDOCTagPosition(string fileString, int startPosition);
-
-void parseToDocuments(string fileString, vector<Document> &documentVector);
-Document parseToDocument(string file, int docTagStartPosition);
-string extractContentInTag(string fileString, string tag, int docTagStartPosition);
-void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector);
-void writeDocDataFile(FilePaths *filePaths, vector<Document> &documentVector);
-void writeTFFile(FilePaths *filePaths, vector<Document> documentVector);
-void readFiles(FilePaths *filePaths);
-string mode;
-const string STEP_1 = "s1";
-const string STEP_2 = "s2";
-
-int main(int argc, char *argv[]) {
-	if(validateArguments(argc, argv)) {
-		FilePaths *filePaths = new FilePaths(argv);
-		//TODO should be deleted
-		Document::outputDirectory = argv[1];
-
-		startTimer();
-		//TODO
-		Document::textProcessor = TextProcessor (filePaths->stopwordsFile);
-
-		startTimer();
-		vector<Document> documentVector;
-		transformFile(filePaths->articleFile("NYT", 2000, 8, 27), documentVector);
-		//transformFilesInFolder(filePaths, "APW", documentVector);
-		//transformFilesInFolder(filePaths, "NYT", documentVector);
-		endTimerAndPrint("Reading input file -------------------------------------");
-
-		if(mode == "-s1") {
-			writeTFFile(filePaths, documentVector);
-		} else if(mode == "-s2") {
-			readFiles(filePaths);
-			//writeIndex();
-		} else {
-
-			cout << "Start cacluate denimonator and write document file..." << endl;
-			startTimer();
-			writeDocDataFile(filePaths, documentVector);
-			endTimerAndPrint("Writing document file -------------------------------------");
-			
-			startTimer();
-			cout << "Start write index and term file..." << endl;
-			writeIndexFile(filePaths, documentVector);
-			endTimerAndPrint("Writing index file -------------------------------------");
-		}
-		endTimerAndPrint("All time -------------------------------------");
-		return 0;
-	} else {
-		return -1;
-	}
-}
-
-// return -1 if argument is not valid
-bool validateArguments(int argc, char* argv[]) {
-	if(argc < 4) {
-		cout << "Use following format" << endl;
-		cout << argv[0] << " input_folder output_folder stopword_file option(omittable)" << endl;
-		cout << "ex) " << argv[0] << " input/ output/ stopwords.txt" << endl;
-		cout << "option -s1 : create data files without indexing" << endl;
-		cout << "option -s2 : create index file with already existing files" << endl;
-		return false;
-	} else {
-		return true;
-	}
-}
 
 void transformFilesInFolder(FilePaths *filePaths, string type, vector<Document> &documentVector) {
 	for(int year = 1998; year <= 2000; year++) {
