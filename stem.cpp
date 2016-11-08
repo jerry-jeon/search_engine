@@ -1,14 +1,13 @@
 #include "document.h"
 #include "util.h"
+#include "text_processor.h"
 
 #include <stack>
-#include <cstdio>
 #include <list>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <regex>
 #include <map>
 #include <cmath>
 #include <iomanip>
@@ -18,7 +17,6 @@ using namespace std;
 using namespace std::chrono;
 
 bool validateArguments(int argc, char* argv[]);
-void initializeStopwords(string stopwordsFile);
 
 void transformFilesInFolder(FilePaths *filePaths, string type, vector<Document> &documentVector);
 void transformFile(string filePath, vector<Document> &documentVector);
@@ -35,8 +33,6 @@ string mode;
 const string STEP_1 = "s1";
 const string STEP_2 = "s2";
 
-
-
 int main(int argc, char *argv[]) {
 	if(validateArguments(argc, argv)) {
 		FilePaths *filePaths = new FilePaths(argv);
@@ -44,7 +40,8 @@ int main(int argc, char *argv[]) {
 		Document::outputDirectory = argv[1];
 
 		startTimer();
-		initializeStopwords(filePaths->stopwordsFile);
+		//TODO
+		Document::textProcessor = TextProcessor (filePaths->stopwordsFile);
 
 		startTimer();
 		vector<Document> documentVector;
@@ -90,21 +87,6 @@ bool validateArguments(int argc, char* argv[]) {
 		return true;
 	}
 }
-
-void initializeStopwords(string stopwordsFile) {
-	list<string> stopwords;
-	string line;
-	ifstream file (stopwordsFile);
-	if(file.is_open()) {
-		while(getline(file, line)) {
-			if(!line.empty())
-				stopwords.push_back(line);
-		}
-		file.close();
-	}
-	Document::stopwords = stopwords;
-}
-
 
 void transformFilesInFolder(FilePaths *filePaths, string type, vector<Document> &documentVector) {
 	for(int year = 1998; year <= 2000; year++) {

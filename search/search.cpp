@@ -12,9 +12,7 @@
 
 using namespace std;
 using namespace util;
-using namespace text_processor;
 
-list<string> stopwords;
 long total_cf = 0;
 int total_words = 0;
 
@@ -77,8 +75,8 @@ int main(int argc, char *argv[]) {
 	startTimer();
 	Directories *directories = new Directories(string(argv[1]), string(argv[2]));
 	if(validateArguments(argc, argv)) {
-		stopwords = stopwordFileToList(directories->stopwordsFile);
-		list<Query> queryList = queryFileToQueries(directories->queryFile);
+		TextProcessor textProcessor = TextProcessor (directories->stopwordsFile);
+		list<Query> queryList = parseToQueries(textProcessor, directories->queryFile);
 		map<string, Term*> terms = termFileToMemory(directories->termFile);
 		vector<Document*> documents = documentFileToMemory(directories->docFile);
 		
@@ -115,20 +113,6 @@ bool validateArguments(int argc, char* argv[]) {
 	} else {
 		return true;
 	}
-}
-
-list<string> stopwordFileToList(string stopwordsFile) {
-	list<string> stopwords;
-	string line;
-	ifstream file (stopwordsFile);
-	if(file.is_open()) {
-		while(getline(file, line)) {
-			if(!line.empty())
-				stopwords.push_back(line);
-		}
-		file.close();
-	}
-	return stopwords;
 }
 
 map<string, Term*> termFileToMemory(string termFile) {
@@ -171,15 +155,12 @@ vector<Document*> documentFileToMemory(string documentFile) {
 	return documents;
 }
 
-list<Query> queryFileToQueries(string queryFile) {
-	return parseToQueries(getFileIntoString(queryFile));
-}
-
-list<Query> parseToQueries(string fileString) {
+list<Query> parseToQueries(TextProcessor textProcessor, string queryFile) {
+	string fileString = getFileIntoString(queryFile);
 	list<Query> queryList;
 	int topTagStartPosition = findTopTagPosition(fileString, 0);
 	while(topTagStartPosition != -1) {
-		queryList.push_back(parseToQuery(fileString, topTagStartPosition));
+		queryList.push_back(parseToQuery(textProcessor, fileString, topTagStartPosition));
 		topTagStartPosition = findTopTagPosition(fileString, topTagStartPosition);
 	}
 	return queryList;
@@ -192,7 +173,7 @@ int findTopTagPosition(string fileString, int startPosition) {
 	return result != string::npos ? result + startTag.length() : -1;
 }
 
-Query parseToQuery(string file, int topTagStartPosition) {
+Query parseToQuery(TextProcessor textProcessor, string file, int topTagStartPosition) {
 	Query query;
 
 	string num_str = stringUntilNextTag(file, "num", topTagStartPosition);
@@ -200,13 +181,13 @@ Query parseToQuery(string file, int topTagStartPosition) {
 
 	string title = stringUntilNextTag(file, "title", topTagStartPosition);
 	query.title = title;
-	query.titleStems = stringToRefinedStems(title);
+	query.titleStems = textProcessor.stringToRefinedStems(title);
 
 	string desc = stringUntilNextTag(file, "desc", topTagStartPosition);
-	query.descriptionStems = stringToRefinedStems(desc);
+	query.descriptionStems = textProcessor.stringToRefinedStems(desc);
 
 	string narr = stringUntilNextTag(file, "narr", topTagStartPosition);
-	query.narrativeStems = stringToRefinedStems(narr);
+	query.narrativeStems = textProcessor.stringToRefinedStems(narr);
 
 	map<string, int>::iterator iter = query.titleStems.begin();
 	while(iter != query.titleStems.end()) {
@@ -232,48 +213,6 @@ string stringUntilNextTag(string fileString, string tag, int topTagStartPosition
 	int startPosition = fileString.find(startTag, topTagStartPosition) + startTag.size();
 	int length = fileString.find("<", startPosition) - startPosition;
 	return fileString.substr(startPosition, length);
-}
-
-map<string, int> stringToRefinedStems(string str) {
-	removePunctuation(str);
-	list<string> wordList = tokenize(str);
-	removeNumberWords(wordList);
-	list<string> stemList;
-	return stem(wordList);
-}
-
-list<string> tokenize(string str) {
-	list<string> result;
-	char * c_str = strdup(str.c_str());
-	char* tokenizer = " -\n\t,.:_()'`\"/{}[]\r\n";
-
-	for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
-		string temp = string(ptr);
-		::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
-		if(isStopword(stopwords, temp))
-			continue;
-		result.push_back(temp);
-	}
-
-	free(c_str);
-	return result;
-}
-
-map<string, int> stem(list<string> words) {
-	map<string, int> stemMap;
-	list<string>::iterator iter = words.begin();
-	while( iter != words.end()) {
-		string word = *iter;
-		Porter2Stemmer::trim(word);
-		Porter2Stemmer::stem(word);
-
-		if(!word.empty()) {
-			stemMap[word]++;
-		}
-
-		iter++;
-	}
-	return stemMap;
 }
 
 map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents) {

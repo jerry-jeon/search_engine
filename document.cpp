@@ -16,7 +16,7 @@
 #include <chrono> // this is for check execution time
 #include <ctime> // this is for check execution time
 
-list<string> Document::stopwords = {};
+TextProcessor Document::textProcessor;
 string Document::outputDirectory = "";
 int Document::documentNumber = 0;
 map<string, int> Document::wordIds = {{"asd", 0}};
@@ -24,15 +24,13 @@ vector<term*> Document::wordList;
 int Document::wordId = 0;
 term* getWord(string word);
 
-using namespace text_processor;
-
 Document::Document(string _docno, string headline, string text) {
 	id = ++documentNumber;
 	docno = _docno;
-	removePunctuation(headline);
-	removePunctuation(text);
-	headlineWords = tokenize(headline);
-	textWords = tokenize(text);
+	textProcessor.removePunctuation(headline);
+	textProcessor.removePunctuation(text);
+	headlineWords = textProcessor.tokenize(headline);
+	textWords = textProcessor.tokenize(text);
 }
 
 Document::Document(int _id, string _docno, float _denominator) {
@@ -45,22 +43,6 @@ int Document::getDocumentNumber() {
 	return documentNumber;
 }
 
-list<string> Document::tokenize(string str) {
-	list<string> result;
-	char * c_str = strdup(str.c_str());
-	char* tokenizer = " -\n\t,.:_()'`\"/{}[]";
-
-	for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
-		string temp = string(ptr);
-		::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
-		if(isStopword(stopwords, temp))
-			continue;
-		result.push_back(temp);
-	}
-
-	free(c_str);
-	return result;
-}
 
 
 void Document::increaseDocumentFrequency() {
@@ -73,8 +55,8 @@ void Document::increaseDocumentFrequency() {
 
 
 void Document::transform() {
-	removeNumberWords(headlineWords);
-	removeNumberWords(textWords);
+	textProcessor.removeNumberWords(headlineWords);
+	textProcessor.removeNumberWords(textWords);
 	stem(headlineStems, headlineWords);
 	stem(textStems, textWords);
 

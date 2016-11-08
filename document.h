@@ -1,6 +1,7 @@
 #ifndef _DOCUMENT_
 #define _DOCUMENT_
 
+#include "text_processor.h"
 #include <string>
 #include <list>
 #include <map>
@@ -25,10 +26,10 @@ public:
 	static string outputDirectory;
 	static map<string, int> wordIds;
 	static vector<term*> wordList;
+	static TextProcessor textProcessor;
 	int id;
 	float weightSum;
 	static int wordId;
-	static list<string> stopwords;
 	string docno;
 	list<string> headlineWords;
 	list<string> textWords;
@@ -37,7 +38,6 @@ public:
 	float denominator = 0;
 
 	static int getDocumentNumber();
-	list<string> tokenize(string str);
 	void transform();
 	void increaseDocumentFrequency();
 	void stem(list<string> &stemList, list<string> words);
