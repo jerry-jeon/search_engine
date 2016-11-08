@@ -1,7 +1,8 @@
+#include "util.h"
+#include "porter2_stemmer.h"
+#include "text_processor.h"
+#include "document.h"
 #include "search.h"
-#include "../util.h"
-#include "../porter2_stemmer.h"
-#include "../text_processor.h"
 
 #include <fstream>
 #include <iostream>
@@ -15,39 +16,6 @@ using namespace util;
 
 long total_cf = 0;
 int total_words = 0;
-
-Directories::Directories(string inputDirectory, string outputDirectory) {
-	indexFile = inputDirectory + "/index.dat";
-	docFile = inputDirectory + "/doc.dat";
-	termFile = inputDirectory + "/term.dat";
-	queryFile = inputDirectory + "/topics25.txt";
-	resultVSMFile = outputDirectory + "/result_vsm.txt";
-	resultLMFile = outputDirectory + "/result_lm.txt";
-	resultFile = outputDirectory + "/result.txt";
-	stopwordsFile = inputDirectory + "/stopwords.txt";
-}
-
-Term::Term(string* tokens) {
-	id = stoi(tokens[0]);
-	word = tokens[1];
-	df = stoi(tokens[2]);
-	cf = stoi(tokens[3]);
-	indexStart = stoull(tokens[4]);
-}
-
-Document::Document(string* tokens) {
-	id = stoi(tokens[0]);
-	docNo = tokens[1];
-	size = stoi(tokens[2]);
-	weightSum = stof(tokens[3]);
-}
-
-Index::Index(string indexFileLine) {
-	termId = stoi(indexFileLine.substr(0, 6));
-	docId = stoi(indexFileLine.substr(6, 6));
-	tf = stoi(indexFileLine.substr(12, 5));
-	weight = stof(indexFileLine.substr(17, 7));
-}
 
 bool Result::operator<(const Result &other) const {
 	return score > other.score;
@@ -69,50 +37,6 @@ void checkIndex(string index) {
 		linecnt++;
 	}
 	cout << "GOOD" << endl;
-}
-
-int main(int argc, char *argv[]) {
-	startTimer();
-	Directories *directories = new Directories(string(argv[1]), string(argv[2]));
-	if(validateArguments(argc, argv)) {
-		TextProcessor textProcessor = TextProcessor (directories->stopwordsFile);
-		list<Query> queryList = parseToQueries(textProcessor, directories->queryFile);
-		map<string, Term*> terms = termFileToMemory(directories->termFile);
-		vector<Document*> documents = documentFileToMemory(directories->docFile);
-		
-		list<Query>::iterator queryIter = queryList.begin();
-		queryIter++;
-		queryIter++;
-		queryIter++;
-		
-		while(queryIter != queryList.end()) {
-			map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(directories->indexFile, *queryIter, terms, documents);
-			list<Result> resultList = rankByVectorSpace(*queryIter, relevantDocuments);
-			cout << "find ENd " << endl;
-			//list<Result> resultList2 = rankByLanguageModel(*queryIter, relevantDocuments, terms);
-
-			//printResult(resultList);
-			resultToFile(*queryIter, resultList, directories->resultVSMFile);
-			//resultToFile(*queryIter, resultList2, directories->resultLMFile);
-			cout << "query end :  " << (*queryIter).title << endl;
-			queryIter++;
-
-		}
-
-	} else {
-		cout << "Use following format" << endl;
-		cout << argv[0] << " input_folder output_folder" << endl;
-		cout << "ex) " << argv[0] << " input output" << endl;
-	}
-	endTimerAndPrint("All time------------------------------");
-}
-
-bool validateArguments(int argc, char* argv[]) {
-	if(argc < 2) {
-		return false;
-	} else {
-		return true;
-	}
 }
 
 map<string, Term*> termFileToMemory(string termFile) {
@@ -257,7 +181,7 @@ list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> 
 		map<string, Index*> indexList = iter->second;
 		Result result;
 
-		result.docNo = document->docNo;
+		result.docno = document->docno;
 		map<string, Index*>::iterator indexIter = indexList.begin();	
 		while(indexIter != indexList.end()) {
 			Index *index = indexIter->second;
@@ -282,7 +206,7 @@ list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>
 	while(iter != relevantDocuments.end()) {
 		Result result;
 		Document *document = iter->first;
-		result.docNo = document->docNo;
+		result.docno = document->docno;
 		float score = 0;
 		map<string, int>::iterator queryIter = query.allStems.begin();
 		while(queryIter != query.allStems.end()) {
@@ -318,7 +242,7 @@ list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>
 void printResult(list<Result> resultList) {
 	list<Result>::iterator iter = resultList.begin();
 	while(iter != resultList.end()) {
-		cout << iter->docNo << "\t" << iter->score << endl;
+		cout << iter->docno << "\t" << iter->score << endl;
 		iter++;
 	}
 }
@@ -330,7 +254,7 @@ void resultToFile(Query query, list<Result> resultList, string resultFile) {
 	file << "query : " << query.title << endl;
 	list<Result>::iterator iter = resultList.begin();
 	while(iter != resultList.end()) {
-		file << iter->docNo << "\t" << iter->score << endl;
+		file << iter->docno << "\t" << iter->score << endl;
 		iter++;
 	}
 	file.close();

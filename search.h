@@ -1,7 +1,8 @@
 #ifndef _SEARCH_
 #define _SEARCH_
 
-#include "../text_processor.h"
+#include "document.h"
+#include "text_processor.h"
 #include <string>
 #include <list>
 #include <vector>
@@ -9,19 +10,6 @@
 #include <map>
 
 using namespace std;
-
-struct Directories {
-	Directories(string inputDirectory, string outputDirectory);
-
-	string indexFile;
-	string docFile;
-	string termFile;
-	string queryFile;
-	string resultVSMFile;
-	string resultLMFile;
-	string resultFile;
-	string stopwordsFile;
-};
 
 struct Query {
 	int num;
@@ -32,46 +20,8 @@ struct Query {
 	map<string, int> allStems;
 };
 
-struct Term {
-	Term(string* tokens);
-
-	int id;
-	string word;
-	int df;
-	int cf;
-	unsigned long long indexStart;
-	bool operator==(const Term &other) const {
-		return id == other.id;
-	}
-};
-
-struct Index {
-	Index(string indexFileLine);
-	Term *term;
-	int termId;
-	int docId;
-	int tf;
-	float weight;
-};
-
-struct Document {
-	Document(string* tokens);
-
-	int id;
-	string docNo;
-	int size;
-	float weightSum;
-	list<Index*> indexes;
-
-	set<Term*> words; // this is for language model
-
-	bool operator==(const Document &other) {
-		return id == other.id;
-	}
-};
-
 struct Result {
-	string docNo;
+	string docno;
 	float score;
 	bool operator<(const Result &other) const;
 };

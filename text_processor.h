@@ -19,7 +19,6 @@ class TextProcessor {
 		bool isStopword(string word);
 		string concatStringList(list<string> words);
 		list<string> tokenize(string str);
-		void stem(list<string> &stemList, list<string> words);
 		map<string, int> stem(list<string> words);
 		map<string, int> stringToRefinedStems(string str);
 

@@ -3,6 +3,7 @@
 #include "text_processor.h"
 #include "index_maker.h"
 #include "search_engine.h"
+#include "search.h"
 
 #include <iostream>
 
@@ -28,6 +29,9 @@ int main(int argc, char *argv[]) {
 	switch(option) {
 		case 1:
 			makeIndex();
+			break;
+		case 2:
+			search();
 			break;
 		default:
 			cout << "There is no option " << option << endl;
@@ -97,5 +101,36 @@ bool validateArguments(int argc, char* argv[]) {
 */
 
 void search() {
+	startTimer();
+	FilePaths *filePaths = new FilePaths("input/", "index/", "result/");
+	TextProcessor textProcessor = TextProcessor (filePaths->stopwordsFile);
+	list<Query> queryList = parseToQueries(textProcessor, filePaths->queryFile);
+	map<string, Term*> terms = termFileToMemory(filePaths->termFile);
+	vector<Document*> documents = documentFileToMemory(filePaths->docFile);
+	
+	list<Query>::iterator queryIter = queryList.begin();
+	queryIter++;
+	queryIter++;
+	queryIter++;
+	
+	while(queryIter != queryList.end()) {
+		map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(filePaths->indexFile, *queryIter, terms, documents);
+		list<Result> resultList = rankByVectorSpace(*queryIter, relevantDocuments);
+		cout << "find ENd " << endl;
+		//list<Result> resultList2 = rankByLanguageModel(*queryIter, relevantDocuments, terms);
 
+		//printResult(resultList);
+		resultToFile(*queryIter, resultList, filePaths->resultVSMFile);
+		//resultToFile(*queryIter, resultList2, filePaths->resultLMFile);
+		cout << "query end :  " << (*queryIter).title << endl;
+		queryIter++;
+
+	}
+	endTimerAndPrint("All time------------------------------");
 }
+/*else {
+		cout << "Use following format" << endl;
+		cout << argv[0] << " input_folder output_folder" << endl;
+		cout << "ex) " << argv[0] << " input output" << endl;
+	}*/
+

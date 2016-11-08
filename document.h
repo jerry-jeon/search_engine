@@ -18,16 +18,41 @@ struct term {
 	string str;
 };
 
+struct Term {
+	Term(string* tokens);
+
+	int id;
+	string word;
+	int df;
+	int cf;
+	unsigned long long indexStart;
+	bool operator==(const Term &other) const {
+		return id == other.id;
+	}
+};
+
+struct Index {
+	Index(string indexFileLine);
+	Term *term;
+	int termId;
+	int docId;
+	int tf;
+	float weight;
+};
+
+
 class Document {
 public:
 	Document(string _docno, string headline, string text); 
 	Document(int _id, string _docno, float _denominator); 
+	Document(string* tokens);
 
 	static string outputDirectory;
 	static map<string, int> wordIds;
 	static vector<term*> wordList;
 	static TextProcessor textProcessor;
 	int id;
+	int size;
 	float weightSum;
 	static int wordId;
 	string docno;
@@ -48,6 +73,15 @@ public:
 	string preFileString();
 
 	set<term*> words;
+
+	//TODO arrange variables
+	list<Index*> indexes;
+
+	set<Term*> s_words; // this is for language model
+
+	bool operator==(const Document &other) {
+		return id == other.id;
+	}
 private:
 	static int documentNumber;
 };
