@@ -1,5 +1,5 @@
-#include "text_processor.h"
-#include "porter2_stemmer.h"
+#include "include/text_processor.h"
+#include "include/porter2_stemmer.h"
 #include <regex>
 #include <fstream>
 #include <cstdio>

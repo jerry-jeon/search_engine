@@ -1,8 +1,8 @@
-#include "util.h"
-#include "porter2_stemmer.h"
-#include "text_processor.h"
-#include "document.h"
-#include "search.h"
+#include "include/util.h"
+#include "include/porter2_stemmer.h"
+#include "include/text_processor.h"
+#include "include/document.h"
+#include "include/search.h"
 
 #include <fstream>
 #include <iostream>

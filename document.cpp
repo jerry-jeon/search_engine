@@ -1,6 +1,6 @@
-#include "document.h"
-#include "text_processor.h"
-#include "porter2_stemmer.h"
+#include "include/document.h"
+#include "include/text_processor.h"
+#include "include/porter2_stemmer.h"
 #include <stack>
 #include <algorithm>
 #include <cstdio>

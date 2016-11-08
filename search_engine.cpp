@@ -1,9 +1,9 @@
-#include "document.h"
-#include "util.h"
-#include "text_processor.h"
-#include "index_maker.h"
-#include "search_engine.h"
-#include "search.h"
+#include "include/document.h"
+#include "include/util.h"
+#include "include/text_processor.h"
+#include "include/index_maker.h"
+#include "include/search_engine.h"
+#include "include/search.h"
 
 #include <iostream>
 

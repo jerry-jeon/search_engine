@@ -1,10 +1,8 @@
-/resources/input/*
-/output/*
+/result
+/index
 /backup/*
 *.out
 *.dat
 *.dSYM
-/search/output/*
-/search/script
 /input/APW
 /input/NYT
