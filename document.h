@@ -17,11 +17,6 @@ struct term {
 	string str;
 };
 
-void removePunctuation(string &str);
-void removeNumberWords(list<string> &words);
-bool isStopword(string word);
-string concatStringList(list<string> words);
-
 class Document {
 public:
 	Document(string _docno, string headline, string text); 

@@ -87,11 +87,8 @@ int findTopTagPosition(string fileString, int startPosition);
 Query parseToQuery(string file, int topTagStartPosition);
 string stringUntilNextTag(string fileString, string tag, int topTagStartPosition);
 map<string, int> stringToRefinedStems(string str);
-void removePunctuation( string &str );
 list<string> tokenize(string str);
-bool isStopword(string word);
 map<string, int> stem(list<string> words);
-void removeNumberWords( list<string> &words );
 
 //TODO 꼭 이방법밖에 없을까...
 map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);

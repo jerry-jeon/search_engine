@@ -1,6 +1,7 @@
 #include "search.h"
 #include "../util.h"
 #include "../porter2_stemmer.h"
+#include "../text_processor.h"
 
 #include <fstream>
 #include <iostream>
@@ -11,6 +12,7 @@
 
 using namespace std;
 using namespace util;
+using namespace text_processor;
 
 list<string> stopwords;
 long total_cf = 0;
@@ -240,13 +242,6 @@ map<string, int> stringToRefinedStems(string str) {
 	return stem(wordList);
 }
 
-void removePunctuation( string &str ) {
-	char* charsToRemove = "%#!?;*$\\+@="; // <>
-	for (unsigned int  i = 0; i < strlen(charsToRemove); ++i) {
-		str.erase( remove(str.begin(), str.end(), charsToRemove[i]), str.end());
-	}
-}
-
 list<string> tokenize(string str) {
 	list<string> result;
 	char * c_str = strdup(str.c_str());
@@ -255,23 +250,13 @@ list<string> tokenize(string str) {
 	for(char * ptr = strtok(c_str, tokenizer); ptr != NULL; ptr = strtok(NULL, tokenizer)) {
 		string temp = string(ptr);
 		::transform(temp.begin(), temp.end(), temp.begin(), ::tolower);
-		if(isStopword(temp))
+		if(isStopword(stopwords, temp))
 			continue;
 		result.push_back(temp);
 	}
 
 	free(c_str);
 	return result;
-}
-
-bool isStopword(string word) {
-	list<string>::iterator iter = stopwords.begin();
-	while( iter != stopwords.end()) {
-		if(word == *iter)
-			return true;
-		iter++;
-	}
-	return false;
 }
 
 map<string, int> stem(list<string> words) {
@@ -289,17 +274,6 @@ map<string, int> stem(list<string> words) {
 		iter++;
 	}
 	return stemMap;
-}
-
-void removeNumberWords( list<string> &words ) {
-	regex reg(".*[0-9]+.*");
-	list<string>::iterator iter = words.begin();
-	while( iter != words.end()) {
-		if(regex_match(*iter, reg)) {
-			iter = words.erase(iter);
-		} else
-			iter++;
-	}
 }
 
 map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents) {
