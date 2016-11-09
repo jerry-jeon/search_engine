@@ -80,7 +80,7 @@ void writeTFFile(FilePaths *filePaths, vector<Document> documentVector) {
 	vector<Document>::iterator documentIterator = documentVector.begin();
 	while( documentIterator != documentVector.end()) {
 		float denominator = 0.0f;
-		set<term*>::iterator wordIterator = documentIterator->words.begin();
+		set<Term*>::iterator wordIterator = documentIterator->words.begin();
 		while(wordIterator != documentIterator->words.end()) {
 			float dValue =	log((float)Document::getDocumentNumber() / (float)(*wordIterator)->df);
 
@@ -99,7 +99,7 @@ void writeTFFile(FilePaths *filePaths, vector<Document> documentVector) {
 	ofstream preTFFile (filePaths->preTFFile);
 	int size = Document::wordList.size();
 	for(int i = 0; i < Document::wordList.size(); i++) {
-		term temp = *Document::wordList[i];
+		Term temp = *Document::wordList[i];
 		map<int, int>::iterator iter = temp.tf.begin();
 		while(iter != temp.tf.end()) {
 			preTFFile << i << '\t' << temp.str << '\t' << iter->first << '\t' << iter->second << endl;;
@@ -114,9 +114,9 @@ void writeTFFile(FilePaths *filePaths, vector<Document> documentVector) {
 	cout << "hmm..." << endl;
 	int j = 0;
 	ofstream preTermFile (filePaths->preTermFile);
-	vector<term*>::iterator termIter = Document::wordList.begin();
+	vector<Term*>::iterator termIter = Document::wordList.begin();
 	while(termIter != Document::wordList.end()) {
-		term *temp = *termIter;
+		Term *temp = *termIter;
 		preTermFile << temp->id << '\t' << temp->str << '\t' << temp->df << '\t' << temp->cf << endl;
 		cout << temp->id << " / " << size << endl;
 		termIter++;
@@ -133,7 +133,7 @@ void writeDocDataFile(FilePaths *filePaths, vector<Document> &documentVector) {
 	vector<Document>::iterator documentIterator = documentVector.begin();
 	while( documentIterator != documentVector.end()) {
 		float denominator = 0.0f;
-		set<term*>::iterator wordIterator = documentIterator->words.begin();
+		set<Term*>::iterator wordIterator = documentIterator->words.begin();
 		while(wordIterator != documentIterator->words.end()) {
 			float dValue =	log((float)Document::getDocumentNumber() / (float)(*wordIterator)->df);
 
@@ -162,7 +162,7 @@ void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector) { // 
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		if(i % 2000 == 0)
 			startTimer();
-		term temp = *Document::wordList[i];
+		Term temp = *Document::wordList[i];
 		
 		int documentFrequency = temp.df;
 		float dValue =	log((float)Document::getDocumentNumber() / (float)documentFrequency);
@@ -255,7 +255,7 @@ void readFiles(FilePaths *filePaths) {
 
 			free(c_str);
 
-			term *temp = new term;
+			Term *temp = new Term;
 			temp->id = stoi(result[0]);
 			temp->str = result[1];
 			temp->df = stoi(result[2]);
@@ -286,7 +286,7 @@ void readFiles(FilePaths *filePaths) {
 
 	for(int i = 1; i < Document::wordList.size(); i++) {
 		//cout << i << endl;
-		term *yaho = Document::wordList[i];
+		Term *yaho = Document::wordList[i];
 		//cout << yaho->str << endl;
 		map<int, int>::iterator iter = yaho->tf.begin();
 		while(iter != yaho->tf.end()) {
@@ -299,7 +299,7 @@ void readFiles(FilePaths *filePaths) {
 	for(int i = 0; i < Document::wordList.size(); i++) {
 		if(i % 2000 == 0)
 			startTimer();
-		term temp = *Document::wordList[i];
+		Term temp = *Document::wordList[i];
 		
 		int documentFrequency = temp.df;
 		float dValue =	log(Document::getDocumentNumber() / documentFrequency);

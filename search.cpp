@@ -157,7 +157,7 @@ map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, 
 				//
 				//TODO id들 0부터 시작하게
 				Document *document = documents[index->docId - 1];
-				relevantDocuments[document][term->word] = index;
+				relevantDocuments[document][term->str] = index;
 			}
 			iterator++;
 		}
@@ -185,7 +185,7 @@ list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> 
 		map<string, Index*>::iterator indexIter = indexList.begin();	
 		while(indexIter != indexList.end()) {
 			Index *index = indexIter->second;
-			numerator += index->weight * query.allStems[index->term->word];
+			numerator += index->weight * query.allStems[index->term->str];
 			indexIter++;
 		}
 		d_denominator = document->weightSum;
@@ -212,8 +212,8 @@ list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>
 		while(queryIter != query.allStems.end()) {
 			Term *term = terms[queryIter->first];
 			int tf = 0;
-			if(iter->second[term->word] != NULL) {
-				tf = iter->second[term->word]->tf;
+			if(iter->second[term->str] != NULL) {
+				tf = iter->second[term->str]->tf;
 			}
 			float cf = term->cf;
 			

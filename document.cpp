@@ -20,13 +20,14 @@ TextProcessor Document::textProcessor;
 string Document::outputDirectory = "";
 int Document::documentNumber = 0;
 map<string, int> Document::wordIds = {{"asd", 0}};
-vector<term*> Document::wordList;
+vector<Term*> Document::wordList;
 int Document::wordId = 0;
-term* getWord(string word);
+Term* getWord(string word);
 
+Term::Term() {}
 Term::Term(string* tokens) {
 	id = stoi(tokens[0]);
-	word = tokens[1];
+	str = tokens[1];
 	df = stoi(tokens[2]);
 	cf = stoi(tokens[3]);
 	indexStart = stoull(tokens[4]);
@@ -70,7 +71,7 @@ int Document::getDocumentNumber() {
 
 
 void Document::increaseDocumentFrequency() {
-	set<term*>::iterator iter = words.begin();
+	set<Term*>::iterator iter = words.begin();
 	while( iter != words.end()) {
 		(*iter)->df++;
 		iter++;
@@ -97,7 +98,7 @@ void Document::stem(list<string> &stemList, list<string> words) {
 
 		if(!word.empty()) {
 			stemList.push_back(word);
-			term *temp = getWord(word);
+			Term *temp = getWord(word);
 			temp->cf++;;
 			temp->tf[id]++;
 
@@ -108,9 +109,9 @@ void Document::stem(list<string> &stemList, list<string> words) {
 	}
 }
 
-term* getWord(string word) {
+Term* getWord(string word) {
 	if(Document::wordIds[word] == 0) {
-		term *temp = new term;
+		Term *temp = new Term;
 		temp->id = ++Document::wordId;
 		Document::wordIds[word] = Document::wordId;
 		temp->str = word;
@@ -135,7 +136,7 @@ string Document::toString() {
 }
 
 void Document::calculateDenominator(float dValue) { // tf idf formula's denominator
-	set<term*>::iterator iter = words.begin();
+	set<Term*>::iterator iter = words.begin();
 	while( iter != words.end()) {
 		denominator += pow((log((*iter)->tf[id]) + 1.0f) * dValue, 2.0f);
 		iter++;

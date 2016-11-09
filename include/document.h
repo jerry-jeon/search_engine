@@ -10,21 +10,15 @@
 
 using namespace std;
 
-struct term {
-	int id;
-	int cf = 0;
-	int df = 0;
-	map<int, int> tf;
-	string str;
-};
-
 struct Term {
+	Term();
 	Term(string* tokens);
 
 	int id;
-	string word;
-	int df;
+	string str;
 	int cf;
+	int df;
+	map<int, int> tf;
 	unsigned long long indexStart;
 	bool operator==(const Term &other) const {
 		return id == other.id;
@@ -49,7 +43,7 @@ public:
 
 	static string outputDirectory;
 	static map<string, int> wordIds;
-	static vector<term*> wordList;
+	static vector<Term*> wordList;
 	static TextProcessor textProcessor;
 	int id;
 	int size;
@@ -72,16 +66,15 @@ public:
 	string toString();
 	string preFileString();
 
-	set<term*> words;
+	set<Term*> words;
 
 	//TODO arrange variables
 	list<Index*> indexes;
 
-	set<Term*> s_words; // this is for language model
-
 	bool operator==(const Document &other) {
 		return id == other.id;
 	}
+
 private:
 	static int documentNumber;
 };
