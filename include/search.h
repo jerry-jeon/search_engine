@@ -42,7 +42,9 @@ map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, 
 list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> relevantDocuments);	
 list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>> relevantDocuments, map<string, Term*> terms);	
 
-void printResult(list<Result> resultList);
 void resultToFile(Query query, list<Result> resultList, string resultFile); 
+
+typedef list<Result> (* modelFunction)(Query query, map<Document*, map<string, Index*>> relevantDocuments, map<string, Term*> terms);
+modelFunction getModelFromOption(int option);
 
 #endif

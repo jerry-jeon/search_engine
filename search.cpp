@@ -237,16 +237,6 @@ list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>
 	return resultList;
 }
 
-
-
-void printResult(list<Result> resultList) {
-	list<Result>::iterator iter = resultList.begin();
-	while(iter != resultList.end()) {
-		cout << iter->docno << "\t" << iter->score << endl;
-		iter++;
-	}
-}
-
 void resultToFile(Query query, list<Result> resultList, string resultFile) {
 	ofstream file (resultFile, ios::app);
 
@@ -258,4 +248,8 @@ void resultToFile(Query query, list<Result> resultList, string resultFile) {
 		iter++;
 	}
 	file.close();
+}
+
+modelFunction getModelFromOption(int option) {
+	return rankByLanguageModel;
 }

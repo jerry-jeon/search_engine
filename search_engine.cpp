@@ -13,8 +13,22 @@ using namespace std::chrono;
 
 int main(int argc, char *argv[]) {
 	int option;
+	string input, index, result;
 	cout <<	"Welcome!" << endl;
 	cout << "----------------------------" << endl << endl;
+
+	cout << "Type directory names with following these format:" << endl;
+	cout << "-------------------------------------------------------------" << endl;
+	cout << "input_directory/ index_dircetory/ result_dircetory/" << endl;
+	cout << "-------------------------------------------------------------" << endl;
+	cin >> input >> index >> result;
+	if(input == ".") {
+		input = "input/";
+		index = "index/";
+		result = "result/";
+	}
+	cout << endl;
+	FilePaths *filePaths = new FilePaths(input, index, result);
 
 	cout << "Choose what to do" << endl;
 	cout << "1. Make index" << endl;
@@ -28,10 +42,10 @@ int main(int argc, char *argv[]) {
 
 	switch(option) {
 		case 1:
-			makeIndex();
+			makeIndex(filePaths);
 			break;
 		case 2:
-			search();
+			search(filePaths);
 			break;
 		default:
 			cout << "There is no option " << option << endl;
@@ -44,9 +58,7 @@ int main(int argc, char *argv[]) {
 	*/
 }
 
-void makeIndex() {
-	// TODO get input from user
-	FilePaths *filePaths = new FilePaths("input/", "index/", "result/");
+void makeIndex(FilePaths *filePaths) {
 	//TODO should be deleted
 	Document::outputDirectory = "index/";
 
@@ -83,54 +95,54 @@ void makeIndex() {
 	endTimerAndPrint("All time -------------------------------------");
 }
 
-/*
-// return -1 if argument is not valid
-bool validateArguments(int argc, char* argv[]) {
-	if(argc < 4) {
-		cout << "Use following format" << endl;
-		cout << argv[0] << " input_folder output_folder stopword_file option(omittable)" << endl;
-		cout << "ex) " << argv[0] << " input/ output/ stopwords.txt" << endl;
-		cout << "option -s1 : create data files without indexing" << endl;
-		cout << "option -s2 : create index file with already existing files" << endl;
-		return false;
-	} else {
-		return true;
-	}
-}
-
-*/
-
-void search() {
+void search(FilePaths *filePaths) {
+	int option;
 	startTimer();
-	FilePaths *filePaths = new FilePaths("input/", "index/", "result/");
+	cout << "Start reading stopwords file..." << endl;
 	TextProcessor textProcessor = TextProcessor (filePaths->stopwordsFile);
-	list<Query> queryList = parseToQueries(textProcessor, filePaths->queryFile);
+	endTimerAndPrint("Finished reading stopwords file");
+	cout << endl << "Start reading term file..." << endl;
+	startTimer();
 	map<string, Term*> terms = termFileToMemory(filePaths->termFile);
+	endTimerAndPrint("Finished reading term file");
+	cout << endl << "Start reading document file..." << endl;
+	startTimer();
 	vector<Document*> documents = documentFileToMemory(filePaths->docFile);
+	endTimerAndPrint("Finished reading document file");
+	startTimer();
+	cout << endl <<"Start reading query file..." << endl;
+	list<Query> queryList = parseToQueries(textProcessor, filePaths->queryFile);
+	endTimerAndPrint("Finished reading query file");
 	
-	list<Query>::iterator queryIter = queryList.begin();
-	queryIter++;
-	queryIter++;
-	queryIter++;
 	
-	while(queryIter != queryList.end()) {
-		map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(filePaths->indexFile, *queryIter, terms, documents);
-		list<Result> resultList = rankByVectorSpace(*queryIter, relevantDocuments);
-		cout << "find ENd " << endl;
-		//list<Result> resultList2 = rankByLanguageModel(*queryIter, relevantDocuments, terms);
+	while(true) {
+		cout << endl << "Choose model" << endl;
+		cout << "1. Vector space model" << endl;
+		cout << "2. Language model" << endl;
+		cout << "3. Exit program" << endl << endl;
 
-		//printResult(resultList);
-		resultToFile(*queryIter, resultList, filePaths->resultVSMFile);
-		//resultToFile(*queryIter, resultList2, filePaths->resultLMFile);
-		cout << "query end :  " << (*queryIter).title << endl;
-		queryIter++;
+		cout << "Type number : ";
+		cout << option;
+		if(option >= 3)
+			break;
 
+
+		modelFunction model = getModelFromOption(option);
+
+		cout << "Start ranking..." << endl;
+		startTimer();
+		list<Query>::iterator queryIter = queryList.begin();
+		while(queryIter != queryList.end()) {
+			startTimer();
+			map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(filePaths->indexFile, *queryIter, terms, documents);
+			list<Result> resultList = rankByVectorSpaceModel(*queryIter, relevantDocuments);
+			//list<Result> resultList2 = rankByLanguageModel(*queryIter, relevantDocuments, terms);
+
+			resultToFile(*queryIter, resultList, filePaths->resultVSMFile);
+			endTimerAndPrint("For query : " + queryIter->title);
+			queryIter++;
+
+		}
+		endTimerAndPrint("All rank time");
 	}
-	endTimerAndPrint("All time------------------------------");
 }
-/*else {
-		cout << "Use following format" << endl;
-		cout << argv[0] << " input_folder output_folder" << endl;
-		cout << "ex) " << argv[0] << " input output" << endl;
-	}*/
-

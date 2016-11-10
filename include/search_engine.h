@@ -2,7 +2,7 @@
 #define _SEARCHENGINE_
 
 int main(int argc, char *argv[]);
-void makeIndex();
-void search();
+void makeIndex(FilePaths *filePaths);
+void search(FilePaths *filePaths);
 
 #endif
