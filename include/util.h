@@ -31,9 +31,6 @@ namespace util {
 		string docyFile;
 		
 		// resultDirectory
-		string resultVSMFile;
-		string resultLMFile;
-		// TODO remove above two lines and make user input to choose what model would be used
 		string resultFile;
 	};
 
@@ -44,6 +41,10 @@ namespace util {
 	int endTimerAndGetMinute();
 	string getFileIntoString(string directory, string fileName);
 	string getFileIntoString(string fileName);
+
+	void trim(string &str);
+	void leftTrim(string &str);
+	void rightTrim(string &str);
 
 }
 

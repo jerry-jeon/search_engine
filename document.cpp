@@ -1,6 +1,7 @@
 #include "include/document.h"
 #include "include/text_processor.h"
 #include "include/porter2_stemmer.h"
+#include "include/util.h"
 #include <stack>
 #include <algorithm>
 #include <cstdio>
@@ -59,6 +60,7 @@ Document::Document(int _id, string _docno, float _denominator) {
 Document::Document(string* tokens) {
 	id = stoi(tokens[0]);
 	docno = tokens[1];
+	util::trim(docno);
 	size = stoi(tokens[2]);
 	weightSum = stof(tokens[3]);
 }

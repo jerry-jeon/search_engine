@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 	if(developMode) {
 		input = "input/";
 		index = "index/";
-		result = "result/";
+		result = "~/Dropbox/ir/";
 	} else {
 		cin >> input >> index >> result;
 	}
@@ -147,7 +147,7 @@ void search(FilePaths *filePaths) {
 		list<Query>::iterator queryIter = queryList.begin();
 		while(queryIter != queryList.end()) {
 			cout << endl;
-			cout << "Scoring " + queryIter->title << endl;
+			cout << "Scoring Query - " + queryIter->title << endl;
 			cout << "===============================================" << endl;
 			startTimer();
 			startTimer();
@@ -155,11 +155,13 @@ void search(FilePaths *filePaths) {
 			endTimerAndPrint("Find relevant documents");
 			list<Result> resultList = model(*queryIter, relevantDocuments, terms);
 
-			resultToFile(*queryIter, resultList, filePaths->resultVSMFile);
+			resultToFile(*queryIter, resultList, filePaths->resultFile);
 			endTimerAndPrint("Rank documents");
 			queryIter++;
 
 		}
+		cout << endl;
 		endTimerAndPrint("All rank time");
+		break;
 	}
 }

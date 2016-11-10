@@ -11,9 +11,11 @@
 using namespace std;
 using namespace std::chrono;
 
-stack<high_resolution_clock::time_point> startTimeStack;
 
 namespace util {
+	stack<high_resolution_clock::time_point> startTimeStack;
+	string whitespaces (" \t\f\v\n\r");
+
 	FilePaths::FilePaths(string inputDirectory, string indexDirectory, string resultDirectory) {
 		this->inputDirectory = inputDirectory;
 		stopwordsFile = inputDirectory + "/stopwords.txt";
@@ -30,8 +32,6 @@ namespace util {
 		tfFile = indexDirectory + "/tf.dat";
 		docyFile = indexDirectory + "/docy.dat";
 
-		resultVSMFile = resultDirectory + "/result_vsm.txt";
-		resultLMFile = resultDirectory + "/result_lm.txt";
 		resultFile = resultDirectory + "/result.txt";
 	}
 
@@ -116,4 +116,24 @@ namespace util {
 		}
 		return result;
 	}
+	
+	void trim(string &str) {
+		rightTrim(str);
+		leftTrim(str);
+	}
+
+	// TODO clear 처리
+	void rightTrim(string &str) {
+	  size_t found = str.find_last_not_of(whitespaces);
+		if (found!=string::npos) {
+	    str.erase(found+1);
+	  } else {
+	    str.clear();
+	  }
+	}
+	
+	void leftTrim(string &str) {
+		str.erase(0, str.find_first_not_of(whitespaces));
+	}
+
 }

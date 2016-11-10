@@ -104,6 +104,7 @@ Query parseToQuery(TextProcessor textProcessor, string file, int topTagStartPosi
 	query.num = stoi(num_str.substr(num_str.find(":") + 1));
 
 	string title = stringUntilNextTag(file, "title", topTagStartPosition);
+	trim(title);
 	query.title = title;
 	query.titleStems = textProcessor.stringToRefinedStems(title);
 
@@ -217,14 +218,6 @@ list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>
 			}
 			float cf = term->cf;
 			
-			/*
-			cout << "tf : " << tf << endl;
-			cout << mu << endl;
-			cout << cf << endl;
-			cout << total_cf << endl;
-			cout << "total_words : " << total_words << endl;
-			*/
-			
 			score += log(((float)tf + mu * cf / (float)total_cf) / ((float)document->size + mu));
 			queryIter++;
 
@@ -238,15 +231,20 @@ list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>
 }
 
 void resultToFile(Query query, list<Result> resultList, string resultFile) {
+	int count = 0;
 	ofstream file (resultFile, ios::app);
 
-	file << "topicnum : " << query.num << endl;
-	file << "query : " << query.title << endl;
+	file << query.num << endl;
 	list<Result>::iterator iter = resultList.begin();
-	while(iter != resultList.end()) {
-		file << iter->docno << "\t" << iter->score << endl;
+	list<Result>::iterator last = --resultList.end();
+
+	while(iter != last && count < 999) {
+		file << iter->docno << "\t";
 		iter++;
+		count++;
 	}
+
+	file << iter->docno << endl;
 	file.close();
 }
 
@@ -257,6 +255,6 @@ modelFunction getModelFromOption(int option) {
 		case 2:
 			return rankByLanguageModel;
 		default:
-			return rankByLanguageModel;
+			return rankByVectorSpace;
 	}
 }
