@@ -171,7 +171,7 @@ bool cmp (const Result &left, const Result &right) {
 	return left.score > right.score;
 }
 
-list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> relevantDocuments) {
+list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> relevantDocuments, map<string, Term*> terms) {
 	list<Result> resultList;
 	map<Document*, map<string, Index*>>::iterator iter = relevantDocuments.begin();
 	while(iter != relevantDocuments.end()) {
@@ -251,5 +251,12 @@ void resultToFile(Query query, list<Result> resultList, string resultFile) {
 }
 
 modelFunction getModelFromOption(int option) {
-	return rankByLanguageModel;
+	switch(option) {
+		case 1:
+			return rankByVectorSpace;
+		case 2:
+			return rankByLanguageModel;
+		default:
+			return rankByLanguageModel;
+	}
 }

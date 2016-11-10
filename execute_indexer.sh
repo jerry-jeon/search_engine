@@ -23,14 +23,14 @@ then
 	fi
 elif [ "$OPTION" == "-d" ]
 then
-	if g++ -std=c++11 -g *.cpp && gdb a.out; then
+	if g++ -std=c++11 -O3 *.cpp && ./a.out -d; then
 		echo "Start execution"
 	fi
 elif [ "$OPTION" == "-c" ]
 then
 	g++ -std=c++11 *.cpp;
 else
-	if g++ -std=c++11 *.cpp && ./a.out input/ index/ result/; then
+	if g++ -std=c++11 -O3 *.cpp && ./a.out; then
 		echo "Start execution"
 	fi
 fi

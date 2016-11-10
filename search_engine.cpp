@@ -11,7 +11,12 @@
 using namespace std;
 using namespace std::chrono;
 
+bool developMode = false;
 int main(int argc, char *argv[]) {
+	if(argc > 1 && string(argv[1]) == "-d") {
+		developMode = true;
+	}
+
 	int option;
 	string input, index, result;
 	cout <<	"Welcome!" << endl;
@@ -21,11 +26,12 @@ int main(int argc, char *argv[]) {
 	cout << "-------------------------------------------------------------" << endl;
 	cout << "input_directory/ index_dircetory/ result_dircetory/" << endl;
 	cout << "-------------------------------------------------------------" << endl;
-	cin >> input >> index >> result;
-	if(input == ".") {
+	if(developMode) {
 		input = "input/";
 		index = "index/";
 		result = "result/";
+	} else {
+		cin >> input >> index >> result;
 	}
 	cout << endl;
 	FilePaths *filePaths = new FilePaths(input, index, result);
@@ -36,9 +42,12 @@ int main(int argc, char *argv[]) {
 	
 
 	cout << "Type number : ";
-	cin >> option;
+	if(developMode) {
+		option = 2;
+	} else {
+		cin >> option;
+	}
 
-	cout << option << endl;
 
 	switch(option) {
 		case 1:
@@ -122,10 +131,14 @@ void search(FilePaths *filePaths) {
 		cout << "3. Exit program" << endl << endl;
 
 		cout << "Type number : ";
-		cout << option;
+		if(developMode) {
+			option = 1;
+		} else {
+			cin >> option;
+		}
+
 		if(option >= 3)
 			break;
-
 
 		modelFunction model = getModelFromOption(option);
 
@@ -133,13 +146,17 @@ void search(FilePaths *filePaths) {
 		startTimer();
 		list<Query>::iterator queryIter = queryList.begin();
 		while(queryIter != queryList.end()) {
+			cout << endl;
+			cout << "Scoring " + queryIter->title << endl;
+			cout << "===============================================" << endl;
+			startTimer();
 			startTimer();
 			map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(filePaths->indexFile, *queryIter, terms, documents);
-			list<Result> resultList = rankByVectorSpaceModel(*queryIter, relevantDocuments);
-			//list<Result> resultList2 = rankByLanguageModel(*queryIter, relevantDocuments, terms);
+			endTimerAndPrint("Find relevant documents");
+			list<Result> resultList = model(*queryIter, relevantDocuments, terms);
 
 			resultToFile(*queryIter, resultList, filePaths->resultVSMFile);
-			endTimerAndPrint("For query : " + queryIter->title);
+			endTimerAndPrint("Rank documents");
 			queryIter++;
 
 		}

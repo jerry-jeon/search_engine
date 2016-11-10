@@ -39,7 +39,7 @@ string stringUntilNextTag(string fileString, string tag, int topTagStartPosition
 //TODO 꼭 이방법밖에 없을까...
 map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents);
 
-list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> relevantDocuments);	
+list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> relevantDocuments, map<string, Term*> terms);	
 list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>> relevantDocuments, map<string, Term*> terms);	
 
 void resultToFile(Query query, list<Result> resultList, string resultFile); 
