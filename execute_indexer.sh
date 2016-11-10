@@ -2,7 +2,7 @@ OPTION=$1
 STEP_OPTION=$2
 
 rm ./a.out > /dev/null 2>&1
-rm result/result.txt > /dev/null 2>&1
+rm ~/Dropbox/ir/result.txt > /dev/null 2>&1
 
 if [ "$OPTION" == "-r" ]
 then

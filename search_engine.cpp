@@ -24,12 +24,12 @@ int main(int argc, char *argv[]) {
 
 	cout << "Type directory names with following these format:" << endl;
 	cout << "-------------------------------------------------------------" << endl;
-	cout << "input_directory/ index_dircetory/ result_dircetory/" << endl;
+	cout << "input_directory index_dircetory result_dircetory" << endl;
 	cout << "-------------------------------------------------------------" << endl;
 	if(developMode) {
-		input = "input/";
-		index = "index/";
-		result = "~/Dropbox/ir/";
+		input = "input";
+		index = "index";
+		result = "/Users/jeongyeongju/Dropbox/ir";
 	} else {
 		cin >> input >> index >> result;
 	}
@@ -123,45 +123,37 @@ void search(FilePaths *filePaths) {
 	list<Query> queryList = parseToQueries(textProcessor, filePaths->queryFile);
 	endTimerAndPrint("Finished reading query file");
 	
-	
-	while(true) {
-		cout << endl << "Choose model" << endl;
-		cout << "1. Vector space model" << endl;
-		cout << "2. Language model" << endl;
-		cout << "3. Exit program" << endl << endl;
+	cout << endl << "Choose model" << endl;
+	cout << "1. Vector space model" << endl;
+	cout << "2. Language model" << endl;
 
-		cout << "Type number : ";
-		if(developMode) {
-			option = 1;
-		} else {
-			cin >> option;
-		}
-
-		if(option >= 3)
-			break;
-
-		modelFunction model = getModelFromOption(option);
-
-		cout << "Start ranking..." << endl;
-		startTimer();
-		list<Query>::iterator queryIter = queryList.begin();
-		while(queryIter != queryList.end()) {
-			cout << endl;
-			cout << "Scoring Query - " + queryIter->title << endl;
-			cout << "===============================================" << endl;
-			startTimer();
-			startTimer();
-			map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(filePaths->indexFile, *queryIter, terms, documents);
-			endTimerAndPrint("Find relevant documents");
-			list<Result> resultList = model(*queryIter, relevantDocuments, terms);
-
-			resultToFile(*queryIter, resultList, filePaths->resultFile);
-			endTimerAndPrint("Rank documents");
-			queryIter++;
-
-		}
-		cout << endl;
-		endTimerAndPrint("All rank time");
-		break;
+	cout << "Type number : ";
+	if(developMode) {
+		option = 1;
+	} else {
+		cin >> option;
 	}
+
+	modelFunction model = getModelFromOption(option);
+
+	cout << "Start ranking..." << endl;
+	startTimer();
+	list<Query>::iterator queryIter = queryList.begin();
+	while(queryIter != queryList.end()) {
+		cout << endl;
+		cout << "Scoring Query - " + queryIter->title << endl;
+		cout << "===============================================" << endl;
+		startTimer();
+		startTimer();
+		map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(filePaths->indexFile, *queryIter, terms, documents);
+		endTimerAndPrint("Find relevant documents");
+		list<Result> resultList = model(*queryIter, relevantDocuments, terms);
+
+		resultToFile(*queryIter, resultList, filePaths->resultFile);
+		endTimerAndPrint("Rank documents");
+		queryIter++;
+
+	}
+	cout << endl;
+	endTimerAndPrint("All rank time");
 }
