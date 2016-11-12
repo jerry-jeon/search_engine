@@ -129,7 +129,7 @@ void search(FilePaths *filePaths) {
 
 	cout << "Type number : ";
 	if(developMode) {
-		option = 1;
+		option = 2;
 	} else {
 		cin >> option;
 	}
@@ -146,6 +146,7 @@ void search(FilePaths *filePaths) {
 		startTimer();
 		startTimer();
 		map<Document*, map<string, Index*>> relevantDocuments = findRelevantDocuments(filePaths->indexFile, *queryIter, terms, documents);
+		cout << "Relevant document size : " << relevantDocuments.size() << endl;
 		endTimerAndPrint("Find relevant documents");
 		list<Result> resultList = model(*queryIter, relevantDocuments, terms);
 
