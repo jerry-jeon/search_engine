@@ -50,7 +50,7 @@ namespace util {
 		string fileName = string(buffer);
 
 		// total path
-		return inputDirectory + type + "/" + to_string(year) + "/" + fileName;
+		return inputDirectory + "/" + type + "/" + to_string(year) + "/" + fileName;
 	}
 
 	void startTimer() {
