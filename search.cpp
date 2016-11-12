@@ -116,7 +116,7 @@ Query parseToQuery(TextProcessor textProcessor, string file, int topTagStartPosi
 
 	map<string, int>::iterator iter = query.titleStems.begin();
 	while(iter != query.titleStems.end()) {
-		query.allStems[iter->first] += iter->second;
+		query.allStems[iter->first] += iter->second * 50;
 		iter++;
 	}
 	iter = query.descriptionStems.begin();
@@ -145,8 +145,8 @@ map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, 
 
 	ifstream indexFile (indexFileName);
 	if(indexFile.is_open()) {
-		map<string, int>::iterator iterator = query.allStems.begin();
-		while( iterator != query.allStems.end()) {
+		map<string, int>::iterator iterator = query.titleStems.begin();
+		while( iterator != query.titleStems.end()) {
 			string line;
 			Term* term = terms[iterator->first];
 			indexFile.seekg(term->indexStart);
