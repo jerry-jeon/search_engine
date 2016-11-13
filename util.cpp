@@ -33,6 +33,7 @@ namespace util {
 		docyFile = indexDirectory + "/docy.dat";
 
 		resultFile = resultDirectory + "/result.txt";
+		relevantFile = resultDirectory + "/relevant_document.txt";
 	}
 
 	FilePaths::FilePaths(char* argv[]) : FilePaths(string(argv[1]), string(argv[2]), string(argv[3])) {}

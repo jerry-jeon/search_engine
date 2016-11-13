@@ -4,6 +4,7 @@
 #include "include/index_maker.h"
 #include "include/search_engine.h"
 #include "include/search.h"
+#include "include/evaluator.h"
 
 #include <iostream>
 
@@ -39,11 +40,12 @@ int main(int argc, char *argv[]) {
 	cout << "Choose what to do" << endl;
 	cout << "1. Make index" << endl;
 	cout << "2. Search with exist index" << endl;
+	cout << "3. Evaluate" << endl;
 	
 
 	cout << "Type number : ";
 	if(developMode) {
-		option = 2;
+		option = 3;
 	} else {
 		cin >> option;
 	}
@@ -55,6 +57,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 2:
 			search(filePaths);
+			break;
+		case 3:
+			evaluate(filePaths);
 			break;
 		default:
 			cout << "There is no option " << option << endl;
@@ -157,4 +162,17 @@ void search(FilePaths *filePaths) {
 	}
 	cout << endl;
 	endTimerAndPrint("All rank time");
+}
+
+void evaluate(FilePaths *filePaths) {
+	map<int, map<string, bool>> relevants = getRelevantDocuments(filePaths->relevantFile);
+	map<int, list<string>> evaluates = getEvaluatingDocuments(filePaths->resultFile);
+	cout << "WHAT THE" << endl;
+
+	map<int, float> averageRP = averageRecallPrecision(relevants, evaluates);
+	map<int, float>::iterator rpIter = averageRP.begin();
+	while(rpIter != averageRP.end()) {
+		cout << "level" << rpIter->first << " : " << rpIter->second << endl;
+		rpIter++;
+	}
 }

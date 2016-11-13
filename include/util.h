@@ -32,6 +32,7 @@ namespace util {
 		
 		// resultDirectory
 		string resultFile;
+		string relevantFile;
 	};
 
 	void startTimer();
