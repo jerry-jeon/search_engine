@@ -22,13 +22,7 @@ namespace util {
 		string docFile;
 		string termFile;
 		string indexFile;
-
-		//TODO These files should be deleted
-		string preDocFile;
-		string preTFFile;
-		string preTermFile;
 		string tfFile;
-		string docyFile;
 		
 		// resultDirectory
 		string resultFile;

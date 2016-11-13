@@ -16,7 +16,5 @@ Document parseToDocument(string file, int docTagStartPosition);
 string extractContentInTag(string fileString, string tag, int docTagStartPosition);
 void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector);
 void writeDocDataFile(FilePaths *filePaths, vector<Document> &documentVector);
-void writeTFFile(FilePaths *filePaths, vector<Document> documentVector);
-void readFiles(FilePaths *filePaths);
 
 #endif

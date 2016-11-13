@@ -66,10 +66,6 @@ int main(int argc, char *argv[]) {
 			break;
 
 	}
-	/*
-	startTimer();
-	endTimerAndPrint("Reading input file -------------------------------------");
-	*/
 }
 
 void makeIndex(FilePaths *filePaths) {
@@ -87,25 +83,16 @@ void makeIndex(FilePaths *filePaths) {
 	transformFilesInFolder(filePaths, "NYT", documentVector);
 	endTimerAndPrint("Reading input file -------------------------------------");
 
-	string mode = "-s3";
+	cout << "Start cacluate denimonator and write document file..." << endl;
+	startTimer();
+	writeDocDataFile(filePaths, documentVector);
+	endTimerAndPrint("Writing document file -------------------------------------");
+	
+	startTimer();
+	cout << "Start write index and term file..." << endl;
+	writeIndexFile(filePaths, documentVector);
+	endTimerAndPrint("Writing index file -------------------------------------");
 
-	if(mode == "-s1") {
-		writeTFFile(filePaths, documentVector);
-	} else if(mode == "-s2") {
-		readFiles(filePaths);
-		//writeIndex();
-	} else {
-
-		cout << "Start cacluate denimonator and write document file..." << endl;
-		startTimer();
-		writeDocDataFile(filePaths, documentVector);
-		endTimerAndPrint("Writing document file -------------------------------------");
-		
-		startTimer();
-		cout << "Start write index and term file..." << endl;
-		writeIndexFile(filePaths, documentVector);
-		endTimerAndPrint("Writing index file -------------------------------------");
-	}
 	endTimerAndPrint("All time -------------------------------------");
 }
 

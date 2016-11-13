@@ -24,13 +24,7 @@ namespace util {
 		docFile = indexDirectory + "/doc.dat";
 		termFile = indexDirectory + "/term.dat";
 		indexFile = indexDirectory + "/index.dat";
-
-		//TODO These files should be deleted
-		preDocFile = indexDirectory + "/pre_doc.dat";
-		preTFFile = indexDirectory + "/pre_tf.dat";
-		preTermFile = indexDirectory + "/pre_term.dat";
 		tfFile = indexDirectory + "/tf.dat";
-		docyFile = indexDirectory + "/docy.dat";
 
 		resultFile = resultDirectory + "/result.txt";
 		relevantFile = resultDirectory + "/relevant_document.txt";
