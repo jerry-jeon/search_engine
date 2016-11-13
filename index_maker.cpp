@@ -150,7 +150,7 @@ void writeDocDataFile(FilePaths *filePaths, vector<Document> &documentVector) {
 
 
 void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector) { // and term.dat
-	cout << "HMM.. " << documentVector.size() << endl;
+	cout << "Document size :  " << documentVector.size() << endl;
 	ofstream tfFile (filePaths->tfFile);
 	ofstream termFile (filePaths->termFile);
 	ofstream indexFile (filePaths->indexFile);
@@ -160,7 +160,7 @@ void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector) { // 
 	unsigned long long index_line = 26;
 
 	for(int i = 0; i < Document::wordList.size(); i++) {
-		if(i % 2000 == 0)
+		if(i % 500 == 0)
 			startTimer();
 		Term temp = *Document::wordList[i];
 		
@@ -176,7 +176,7 @@ void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector) { // 
 			float numerator = (log((float)termFrequency) + 1.0f) * dValue;	//get doc.data and denominator
 			float weight = numerator / documentVector[tfIterator->first - 1].denominator; // is denominator
 			if(documentVector[tfIterator->first - 1].denominator == 0) {
-				cout << "YES!!!!!!!!!!" << endl;
+				cout << "denominator is zero" << endl;
 			}
 					// get figure of weight
 			int temp_i = (int)weight;
@@ -194,7 +194,7 @@ void writeIndexFile(FilePaths *filePaths, vector<Document> documentVector) { // 
 
 		termFile << temp.id << '\t' << temp.str << '\t' << temp.df << '\t' << temp.cf << '\t' << pre_df * index_line << endl;;
 		pre_df += temp.df;
-		if(i % 2000 == 0) {
+		if(i % 500 == 0) {
 			cout << temp.id << " / " << size << "   " << (float)((float)i / (float)size) * 100 << "% proceeding" << endl;
 			if(endTimerAndGetMinute() > 0) {
 				cout << "Word / Minute speed : " << (int)(i / endTimerAndGetMinute()) << endl;

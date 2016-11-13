@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
 void makeIndex(FilePaths *filePaths) {
 	//TODO should be deleted
-	Document::outputDirectory = "index/";
+	Document::outputDirectory = filePaths->indexFile;
 
 	startTimer();
 	//TODO
@@ -77,9 +77,9 @@ void makeIndex(FilePaths *filePaths) {
 
 	startTimer();
 	vector<Document> documentVector;
-	transformFile(filePaths->articleFile("NYT", 2000, 8, 27), documentVector);
-	//transformFilesInFolder(filePaths, "APW", documentVector);
-	//transformFilesInFolder(filePaths, "NYT", documentVector);
+	//transformFile(filePaths->articleFile("NYT", 2000, 8, 27), documentVector);
+	transformFilesInFolder(filePaths, "APW", documentVector);
+	transformFilesInFolder(filePaths, "NYT", documentVector);
 	endTimerAndPrint("Reading input file -------------------------------------");
 
 	string mode = "-s3";

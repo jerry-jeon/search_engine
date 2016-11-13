@@ -1,5 +1,6 @@
 #include "include/text_processor.h"
 #include "include/porter2_stemmer.h"
+#include "include/util.h"
 #include <regex>
 #include <fstream>
 #include <cstdio>
@@ -34,10 +35,11 @@ void TextProcessor::removePunctuation( string &str ) {
 }
 
 void TextProcessor::removeNumberWords( list<string> &words ) {
-	regex reg(".*[0-9]+.*");
+	regex numReg(".*[0-9]+.*");
+	regex tagReg("<[^>]*>");
 	list<string>::iterator iter = words.begin();
 	while( iter != words.end()) {
-		if(regex_match(*iter, reg)) {
+		if(regex_match(*iter, numReg) || regex_match(*iter, tagReg)) {
 			iter = words.erase(iter);
 		} else
 			iter++;
@@ -87,7 +89,7 @@ map<string, int> TextProcessor::stem(list<string> words) {
 	list<string>::iterator iter = words.begin();
 	while( iter != words.end()) {
 		string word = *iter;
-		Porter2Stemmer::trim(word);
+		util::trim(word);
 		Porter2Stemmer::stem(word);
 
 		if(!word.empty()) {

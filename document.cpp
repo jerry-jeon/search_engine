@@ -25,7 +25,11 @@ vector<Term*> Document::wordList;
 int Document::wordId = 0;
 Term* getWord(string word);
 
-Term::Term() {}
+Term::Term() {
+	df = 0;
+	cf = 0;
+	indexStart = 0;
+}
 Term::Term(string* tokens) {
 	id = stoi(tokens[0]);
 	str = tokens[1];
@@ -95,7 +99,7 @@ void Document::stem(list<string> &stemList, list<string> words) {
 	list<string>::iterator iter = words.begin();
 	while( iter != words.end()) {
 		string word = *iter;
-		Porter2Stemmer::trim(word);
+		util::trim(word);
 		Porter2Stemmer::stem(word);
 
 		if(!word.empty()) {
