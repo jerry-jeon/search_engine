@@ -7,6 +7,7 @@
 #include "include/evaluator.h"
 
 #include <iostream>
+#include <fstream>
 
 //using namespace util;
 using namespace std;
@@ -45,7 +46,7 @@ int main(int argc, char *argv[]) {
 
 	cout << "Type number : ";
 	if(developMode) {
-		option = 3;
+		option = 2;
 	} else {
 		cin >> option;
 	}
@@ -131,6 +132,7 @@ void search(FilePaths *filePaths) {
 	cout << "Start ranking..." << endl;
 	startTimer();
 	list<Query>::iterator queryIter = queryList.begin();
+	ofstream temp (filePaths->resultFile);
 	while(queryIter != queryList.end()) {
 		cout << endl;
 		cout << "Scoring Query - " + queryIter->title << endl;
