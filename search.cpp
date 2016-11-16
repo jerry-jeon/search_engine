@@ -109,9 +109,11 @@ Query parseToQuery(TextProcessor textProcessor, string file, int topTagStartPosi
 	query.titleStems = textProcessor.stringToRefinedStems(title);
 
 	string desc = stringUntilNextTag(file, "desc", topTagStartPosition);
+	desc = desc.substr(desc.find(":"));
 	query.descriptionStems = textProcessor.stringToRefinedStems(desc);
 
 	string narr = stringUntilNextTag(file, "narr", topTagStartPosition);
+	narr = narr.substr(narr.find(":"));
 	query.narrativeStems = textProcessor.stringToRefinedStems(narr);
 
 	map<string, int>::iterator iter = query.titleStems.begin();
@@ -142,6 +144,8 @@ string stringUntilNextTag(string fileString, string tag, int topTagStartPosition
 
 map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, Query query, map<string, Term*> terms, vector<Document*> documents) {
 	map<Document*, map<string, Index*>> relevantDocuments;
+	bool lackOfDocument = true;
+	map<int, string> words;
 
 	ifstream indexFile (indexFileName);
 	if(indexFile.is_open()) {
@@ -149,6 +153,15 @@ map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, 
 		while( iterator != query.titleStems.end()) {
 			string line;
 			Term* term = terms[iterator->first];
+			words[term->df] = iterator->first;
+
+			iterator++;
+		}
+		
+		map<int, string>::iterator iter = words.begin();
+		while( iter != words.end()) {
+			string line;
+			Term* term = terms[iter->second];
 			indexFile.seekg(term->indexStart);
 
 			for(int i = 0; i < term->df; i++) {
@@ -158,10 +171,55 @@ map<Document*, map<string, Index*>> findRelevantDocuments(string indexFileName, 
 				//
 				//TODO id들 0부터 시작하게
 				Document *document = documents[index->docId - 1];
-				relevantDocuments[document][term->str] = index;
+				if(lackOfDocument) {
+					relevantDocuments[document][term->str] = index;
+				}
+				else if(relevantDocuments.find(document) != relevantDocuments.end()) {
+					relevantDocuments[document][term->str] = index;
+				}
 			}
-			iterator++;
+			if(relevantDocuments.size() >= 1000)
+				lackOfDocument = false;
+			iter++;
 		}
+
+		if(lackOfDocument) {
+			words.clear();
+			map<string, int>::iterator iterator = query.descriptionStems.begin();
+			while( iterator != query.descriptionStems.end()) {
+				string line;
+				Term* term = terms[iterator->first];
+				words[term->df] = iterator->first;
+
+				iterator++;
+			}
+			map<int, string>::iterator iter = words.begin();
+			while( iter != words.end()) {
+				string line;
+				Term* term = terms[iter->second];
+				indexFile.seekg(term->indexStart);
+
+				for(int i = 0; i < term->df; i++) {
+					getline(indexFile, line);
+					Index *index = new Index(line);
+					index->term = term;
+					
+					//
+					//TODO id들 0부터 시작하게
+					Document *document = documents[index->docId - 1];
+					if(lackOfDocument) {
+						relevantDocuments[document][term->str] = index;
+					}
+					else if(relevantDocuments.find(document) != relevantDocuments.end()) {
+						relevantDocuments[document][term->str] = index;
+					}
+				}
+				if(relevantDocuments.size() >= 1000)
+					break;
+				iter++;
+			}
+		}
+
 		indexFile.close();
 	}
 
@@ -201,7 +259,7 @@ list<Result> rankByVectorSpace(Query query, map<Document*, map<string, Index*>> 
 
 
 list<Result> rankByLanguageModel(Query query, map<Document*, map<string, Index*>> relevantDocuments, map<string, Term*> terms) {	
-	float mu = 1500.0f;
+	float mu = 3500.0f;
 	list<Result> resultList;
 	map<Document*, map<string, Index*>>::iterator iter = relevantDocuments.begin();
 	while(iter != relevantDocuments.end()) {
