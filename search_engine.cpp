@@ -156,12 +156,12 @@ void search(FilePaths *filePaths) {
 void evaluate(FilePaths *filePaths) {
 	map<int, map<string, bool>> relevants = getRelevantDocuments(filePaths->relevantFile);
 	map<int, list<string>> evaluates = getEvaluatingDocuments(filePaths->resultFile);
-	cout << "WHAT THE" << endl;
+	ofstream file (filePaths->evaluation);
 
 	map<int, float> averageRP = averageRecallPrecision(relevants, evaluates);
 	map<int, float>::iterator rpIter = averageRP.begin();
 	while(rpIter != averageRP.end()) {
-		cout << "level" << rpIter->first << " : " << rpIter->second << endl;
+		file << "level" << rpIter->first << " : " << rpIter->second << endl;
 		rpIter++;
 	}
 }

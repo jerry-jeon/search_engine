@@ -27,6 +27,7 @@ namespace util {
 		// resultDirectory
 		string resultFile;
 		string relevantFile;
+		string evaluationFile;
 	};
 
 	void startTimer();

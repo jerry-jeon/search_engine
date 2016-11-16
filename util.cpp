@@ -28,6 +28,7 @@ namespace util {
 
 		resultFile = resultDirectory + "/result.txt";
 		relevantFile = resultDirectory + "/relevant_document.txt";
+		evaluationFile = resultDirectory + "/evaluation.txt";
 	}
 
 	FilePaths::FilePaths(char* argv[]) : FilePaths(string(argv[1]), string(argv[2]), string(argv[3])) {}
