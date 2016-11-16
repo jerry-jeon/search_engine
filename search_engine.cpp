@@ -143,9 +143,8 @@ void search(FilePaths *filePaths) {
 		cout << "Relevant document size : " << relevantDocuments.size() << endl;
 		endTimerAndPrint("Find relevant documents");
 		list<Result> resultList = model(*queryIter, relevantDocuments, terms);
-
-		resultToFile(*queryIter, resultList, filePaths->resultFile);
 		endTimerAndPrint("Rank documents");
+		resultToFile(*queryIter, resultList, filePaths->resultFile);
 		queryIter++;
 
 	}
