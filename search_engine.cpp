@@ -29,9 +29,9 @@ int main(int argc, char *argv[]) {
 	cout << "input_directory index_dircetory result_dircetory" << endl;
 	cout << "-------------------------------------------------------------" << endl;
 	if(developMode) {
-		input = "input";
-		index = "index";
-		result = "/Users/jeongyeongju/Dropbox/ir";
+		input = ".";
+		index = ".";
+		result = ".";
 	} else {
 		cin >> input >> index >> result;
 	}
@@ -156,7 +156,7 @@ void search(FilePaths *filePaths) {
 void evaluate(FilePaths *filePaths) {
 	map<int, map<string, bool>> relevants = getRelevantDocuments(filePaths->relevantFile);
 	map<int, list<string>> evaluates = getEvaluatingDocuments(filePaths->resultFile);
-	ofstream file (filePaths->evaluation);
+	ofstream file (filePaths->evaluationFile);
 
 	map<int, float> averageRP = averageRecallPrecision(relevants, evaluates);
 	map<int, float>::iterator rpIter = averageRP.begin();
